@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp, Users, DollarSign, BookOpen, ArrowUpRight, ArrowDownRight, RefreshCw, LayoutDashboard, Printer, Layout } from 'lucide-react';
+import { TrendingUp, Users, DollarSign, BookOpen, ArrowUpRight, ArrowDownRight, RefreshCw, LayoutDashboard, Printer, Layout, Clock, Download, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PrintDesigner } from '../components/PrintDesigner';
 
@@ -114,11 +114,19 @@ export default function Dashboard() {
             transition={{ duration: 0.5 }}
           >
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
               <StatCard title="Total Conversions" value={stats?.totalConversions || 0} icon={Users} trend="up" />
               <StatCard title="Gross Revenue" value={`$${stats?.totalRevenue?.toLocaleString() || 0}`} icon={DollarSign} trend="up" />
               <StatCard title="Books Forged" value={stats?.totalConversions || 0} icon={BookOpen} trend="up" />
               <StatCard title="Active Gates" value={stats?.gateDistribution?.length || 0} icon={TrendingUp} trend="up" />
+            </div>
+
+            {/* Reading Analytics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+              <StatCard title="Total Readers" value={stats?.reading?.totalReaders || 0} icon={Eye} trend="up" />
+              <StatCard title="Avg Read Time" value={`${stats?.reading?.avgReadTimeMinutes || 0} min`} icon={Clock} />
+              <StatCard title="PDF Downloads" value={stats?.reading?.totalDownloads || 0} icon={Download} trend="up" />
+              <StatCard title="Avg Pages Reached" value={`${stats?.reading?.avgMaxPage || 0} / 148`} icon={BookOpen} />
             </div>
 
             {/* Charts Grid */}
@@ -216,6 +224,45 @@ export default function Dashboard() {
                     ) : (
                       <tr>
                         <td colSpan={5} className="px-6 py-12 text-center text-gray-600 italic">No forgings recorded yet</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Recent Readers Table */}
+            <div className="bg-[#111] border border-gray-800 rounded-lg shadow-xl overflow-hidden mt-8">
+              <div className="p-6">
+                <h3 className="text-gray-200 text-sm uppercase tracking-widest">Recent Readers</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-black/50 border-y border-gray-800">
+                      <th className="px-6 py-4 text-xs uppercase tracking-widest text-gray-500 font-medium">User</th>
+                      <th className="px-6 py-4 text-xs uppercase tracking-widest text-gray-500 font-medium">Gate</th>
+                      <th className="px-6 py-4 text-xs uppercase tracking-widest text-gray-500 font-medium">Current Page</th>
+                      <th className="px-6 py-4 text-xs uppercase tracking-widest text-gray-500 font-medium">Max Page</th>
+                      <th className="px-6 py-4 text-xs uppercase tracking-widest text-gray-500 font-medium">Read Time</th>
+                      <th className="px-6 py-4 text-xs uppercase tracking-widest text-gray-500 font-medium text-right">Downloads</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800">
+                    {stats?.reading?.recentReaders?.length > 0 ? (
+                      stats.reading.recentReaders.map((row: any, i: number) => (
+                        <tr key={i} className="hover:bg-white/5 transition-colors">
+                          <td className="px-6 py-4 text-sm text-gray-300">{row.user_name}</td>
+                          <td className="px-6 py-4 text-sm text-gray-400 font-serif italic">{gateToGlyphName[row.gate] || row.gate}</td>
+                          <td className="px-6 py-4 text-sm text-gray-400">{row.current_page}</td>
+                          <td className="px-6 py-4 text-sm text-[#00d0ff]">{row.max_page_reached}</td>
+                          <td className="px-6 py-4 text-sm text-gray-400">{Math.round(row.total_reading_seconds / 60)} min</td>
+                          <td className="px-6 py-4 text-sm text-gray-200 font-mono text-right">{row.pdf_downloaded}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="px-6 py-12 text-center text-gray-600 italic">No readers tracked yet</td>
                       </tr>
                     )}
                   </tbody>

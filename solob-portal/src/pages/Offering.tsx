@@ -184,7 +184,7 @@ export default function Offering() {
                         : "border-gray-800 text-gray-500 hover:border-gray-600 hover:text-gray-300"
                     )}
                   >
-                    $77 Premium
+                    $77 Standard
                   </div>
                   <div
                     onClick={() => setSubOption('premium')}
@@ -195,7 +195,7 @@ export default function Offering() {
                         : "border-gray-800 text-gray-500 hover:border-gray-600 hover:text-gray-300"
                     )}
                   >
-                    $99 Premium
+                    $99 Standard
                   </div>
                 </div>
               </motion.div>

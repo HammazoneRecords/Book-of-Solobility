@@ -42,18 +42,20 @@ export default function Threshold() {
 
     const code = analyticsCode.trim().toUpperCase();
 
-    if (code === 'ADMIN') {
-      navigate('/dashboard');
-      return;
-    }
-
-    if (code === 'SOLOB-XXXX') {
-      navigate('/reader?session_id=simulated_demo&gate=N&name=Demo%20User&tier=premium&restored=true');
-      return;
-    }
-
     setIsVerifyingAnalytics(true);
     try {
+      // Try admin auth first
+      const adminRes = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      if (adminRes.ok) {
+        navigate('/dashboard');
+        return;
+      }
+
+      // Otherwise treat as receipt lookup
       const response = await fetch(`/api/verify-receipt?receipt=${encodeURIComponent(code)}`);
       const data = await response.json();
       if (data.success) {

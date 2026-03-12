@@ -17,17 +17,13 @@ const DownloadPyramid = ({ gate }: { gate: string | null }) => {
     setTimeout(() => {
       setIsSpinning(false);
       setHasSpun(true);
-      // Simulate download with a real blob
-      const content = "The Book of Solobility - Digital Edition\n\nThis is a simulated digital copy of your personalized reflection.";
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
+      // Download the actual PDF
       const link = document.createElement('a');
-      link.href = url;
-      link.download = 'The_Book_of_Solobility.txt';
+      link.href = '/Book_of_Solobility_V0.pdf';
+      link.download = 'The_Book_of_Solobility_V0.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
     }, 2000);
   };
 
@@ -269,7 +265,7 @@ export default function Confirmation() {
               </div>
 
               <a
-                href="https://github.com/mindwaveja/solobility"
+                href="https://github.com/HammazoneRecords/Book-of-Solobility"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block w-full px-6 py-3 border border-gray-800 text-gray-500 text-[10px] uppercase tracking-[0.2em] rounded hover:border-gray-600 hover:text-gray-300 transition-colors duration-300"

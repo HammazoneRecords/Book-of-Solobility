@@ -22,6 +22,21 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS reader_analytics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT,
+    user_name TEXT,
+    gate TEXT,
+    current_page INTEGER DEFAULT 1,
+    max_page_reached INTEGER DEFAULT 1,
+    total_reading_seconds INTEGER DEFAULT 0,
+    pdf_downloaded INTEGER DEFAULT 0,
+    last_heartbeat DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -198,6 +213,70 @@ async function startServer() {
     res.json({ status: "ok" });
   });
 
+  // --- ADMIN AUTH ---
+  const ADMIN_KEY = process.env.ADMIN_KEY || 'SOLOB_ADMIN_2026';
+
+  app.post("/api/admin/verify", (req, res) => {
+    const { code } = req.body;
+    if (code === ADMIN_KEY) {
+      res.json({ success: true });
+    } else {
+      res.status(401).json({ error: "Unauthorized" });
+    }
+  });
+
+  // --- READER ANALYTICS ---
+  app.post("/api/analytics/heartbeat", (req, res) => {
+    try {
+      const { session_id, user_name, gate, current_page, max_page_reached } = req.body;
+      if (!session_id) return res.status(400).json({ error: "session_id required" });
+
+      const existing = db.prepare("SELECT * FROM reader_analytics WHERE session_id = ?").get(session_id) as any;
+
+      if (existing) {
+        db.prepare(`
+          UPDATE reader_analytics
+          SET current_page = ?,
+              max_page_reached = MAX(max_page_reached, ?),
+              total_reading_seconds = total_reading_seconds + 30,
+              last_heartbeat = CURRENT_TIMESTAMP
+          WHERE session_id = ?
+        `).run(current_page || 1, max_page_reached || 1, session_id);
+      } else {
+        db.prepare(`
+          INSERT INTO reader_analytics (session_id, user_name, gate, current_page, max_page_reached, total_reading_seconds)
+          VALUES (?, ?, ?, ?, ?, 0)
+        `).run(session_id, user_name || 'Unknown', gate || 'N', current_page || 1, max_page_reached || 1);
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Heartbeat error:", error);
+      res.status(500).json({ error: "Failed to record heartbeat" });
+    }
+  });
+
+  app.post("/api/analytics/download", (req, res) => {
+    try {
+      const { session_id } = req.body;
+      if (!session_id) return res.status(400).json({ error: "session_id required" });
+
+      const existing = db.prepare("SELECT * FROM reader_analytics WHERE session_id = ?").get(session_id) as any;
+      if (existing) {
+        db.prepare("UPDATE reader_analytics SET pdf_downloaded = pdf_downloaded + 1 WHERE session_id = ?").run(session_id);
+      } else {
+        db.prepare(`
+          INSERT INTO reader_analytics (session_id, pdf_downloaded)
+          VALUES (?, 1)
+        `).run(session_id);
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to record download" });
+    }
+  });
+
   app.get("/api/verify-receipt", (req, res) => {
     try {
       const { receipt, gate } = req.query;
@@ -236,11 +315,25 @@ async function startServer() {
       const recentPurchases = db.prepare("SELECT * FROM purchases ORDER BY created_at DESC LIMIT 10").all();
       const gateDistribution = db.prepare("SELECT gate as name, COUNT(*) as value FROM purchases GROUP BY gate").all();
 
+      // Reader analytics
+      const totalReaders = db.prepare("SELECT COUNT(*) as count FROM reader_analytics").get() as any;
+      const avgReadTime = db.prepare("SELECT AVG(total_reading_seconds) as avg FROM reader_analytics WHERE total_reading_seconds > 0").get() as any;
+      const totalDownloads = db.prepare("SELECT SUM(pdf_downloaded) as total FROM reader_analytics").get() as any;
+      const avgMaxPage = db.prepare("SELECT AVG(max_page_reached) as avg FROM reader_analytics WHERE max_page_reached > 0").get() as any;
+      const recentReaders = db.prepare("SELECT session_id, user_name, gate, current_page, max_page_reached, total_reading_seconds, pdf_downloaded, last_heartbeat FROM reader_analytics ORDER BY last_heartbeat DESC LIMIT 10").all();
+
       res.json({
         totalConversions: totalConversions.count,
         totalRevenue: (totalRevenue.sum || 0) / 100,
         recentPurchases,
-        gateDistribution
+        gateDistribution,
+        reading: {
+          totalReaders: totalReaders.count,
+          avgReadTimeMinutes: Math.round((avgReadTime.avg || 0) / 60),
+          totalDownloads: totalDownloads.total || 0,
+          avgMaxPage: Math.round(avgMaxPage.avg || 0),
+          recentReaders
+        }
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch stats" });

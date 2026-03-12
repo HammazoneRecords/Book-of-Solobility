@@ -96,6 +96,42 @@ export default function Reader() {
     return () => { cancelled = true; };
   }, []);
 
+  // Silent analytics heartbeat (every 30s)
+  const maxPageRef = useRef(1);
+  useEffect(() => {
+    if (currentPdfPage > maxPageRef.current) maxPageRef.current = currentPdfPage;
+  }, [currentPdfPage]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    const interval = setInterval(() => {
+      fetch('/api/analytics/heartbeat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          user_name: name,
+          gate,
+          current_page: currentPdfPage,
+          max_page_reached: maxPageRef.current
+        })
+      }).catch(() => {}); // Silent fail
+    }, 30000);
+    // Send initial heartbeat immediately
+    fetch('/api/analytics/heartbeat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sessionId,
+        user_name: name,
+        gate,
+        current_page: currentPdfPage,
+        max_page_reached: maxPageRef.current
+      })
+    }).catch(() => {});
+    return () => clearInterval(interval);
+  }, [sessionId, name, gate]);
+
   // Gate color theming
   useEffect(() => {
     const gateColors: Record<string, string> = {
