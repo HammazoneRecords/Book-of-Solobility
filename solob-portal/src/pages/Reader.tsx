@@ -248,7 +248,7 @@ export default function Reader() {
         currentChapter={currentChapter}
         setCurrentChapter={navigateToChapter}
         subPage={subPage}
-        setSubPage={(sp: number) => navigateToSubPage(currentChapter, sp)}
+        setSubPage={(ch: number, sp: number) => navigateToSubPage(ch, sp)}
         mainScrollRef={mainScrollRef}
         bookmarks={bookmarks.map(p => {
           const info = pageToChapterInfo(p);

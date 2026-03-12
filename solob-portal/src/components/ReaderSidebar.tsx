@@ -17,7 +17,7 @@ interface ReaderSidebarProps {
   currentChapter: number;
   setCurrentChapter: (idx: number) => void;
   subPage: number;
-  setSubPage: (page: number) => void;
+  setSubPage: (chapterIdx: number, subPageIdx: number) => void;
   mainScrollRef: React.RefObject<HTMLElement | null>;
   bookmarks: { chapter: number; subPage: number }[];
   sessionId: string;
@@ -126,7 +126,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
                 onGateSelect={(gateName) => {
                   const targetGate = jhanosGates.find(g => g.name === gateName);
                   if (targetGate) {
-                    navigateToChapter(targetGate.start);
+                    setCurrentChapter(targetGate.start);
                     setExpandedGates(prev => [...new Set([...prev, gateName])]);
                   }
                 }}
@@ -174,7 +174,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
                               return (
                                 <div key={idx} className="space-y-4 pl-2">
                                   <button
-                                    onClick={() => navigateToChapter(idx)}
+                                    onClick={() => setCurrentChapter(idx)}
                                     className="w-full text-left group flex items-start gap-4"
                                   >
                                     <span className={`text-[10px] font-sans mt-2 transition-colors ${isCurrentChapter ? 'text-[#00d0ff]' : 'text-gray-700 group-hover:text-gray-400'}`}>
@@ -187,17 +187,16 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
                                     </div>
                                   </button>
 
-                                  {isCurrentChapter && ch.pages > 1 && (
+                                  {ch.pages > 1 && (
                                     <div className="ml-9 flex flex-wrap gap-2 pt-1 pb-4">
                                       {Array.from({ length: ch.pages }).map((_, sIdx) => (
                                         <button
                                           key={sIdx}
                                           onClick={() => {
-                                            setSubPage(sIdx);
+                                            setSubPage(idx, sIdx);
                                             if (typeof window !== 'undefined' && window.innerWidth < 1280) setIsSidebarOpen(false);
-                                            mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
                                           }}
-                                          className={`w-6 h-6 flex items-center justify-center text-[8px] rounded-full border transition-all ${sIdx === subPage
+                                          className={`w-6 h-6 flex items-center justify-center text-[8px] rounded-full border transition-all ${isCurrentChapter && sIdx === subPage
                                             ? 'bg-[#00d0ff] border-[#00d0ff] text-black font-bold'
                                             : 'border-white/10 text-gray-500 hover:border-white/30'
                                             }`}
@@ -211,9 +210,17 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
                                   {chapterBookmarks.length > 0 && (
                                     <div className="ml-9 flex flex-wrap gap-2">
                                       {chapterBookmarks.map((b, bIdx) => (
-                                        <span key={bIdx} className="text-[7px] uppercase tracking-widest text-[#00d0ff]/60 px-1.5 py-0.5 border border-[#00d0ff]/20 rounded-sm">
-                                          P.{getGlobalPageNumber(b.chapter, b.subPage)}
-                                        </span>
+                                          <button 
+                                            key={bIdx} 
+                                            onClick={() => {
+                                              const page = getGlobalPageNumber(b.chapter, b.subPage);
+                                              if (onBookmarkClick) onBookmarkClick(page);
+                                            }}
+                                            className="text-[7px] uppercase tracking-widest text-[#00d0ff]/80 hover:text-white px-1.5 py-0.5 border border-[#00d0ff]/20 hover:border-[#00d0ff]/60 hover:bg-[#00d0ff]/10 rounded-sm transition-all cursor-pointer"
+                                            title="Go to Bookmark"
+                                          >
+                                            P.{getGlobalPageNumber(b.chapter, b.subPage)}
+                                          </button>
                                       ))}
                                     </div>
                                   )}
