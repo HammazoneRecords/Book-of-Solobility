@@ -115,23 +115,24 @@ export default function Confirmation() {
   const tierParam = searchParams.get('tier');
   const isRestored = searchParams.get('restored') === 'true';
 
-  const { name, gate, setSessionId, setTier, reset } = useUserStore();
+  const { name, gate, setSessionId, setTier, reset, sessionId: storedSessionId, tier: storedTier } = useUserStore();
   const navigate = useNavigate();
   const [invoiceNumber, setInvoiceNumber] = useState('');
 
   useEffect(() => {
-    if (!sessionId) {
+    const activeSessionId = sessionId || storedSessionId;
+    if (!activeSessionId) {
       navigate('/');
       return;
     }
 
-    setInvoiceNumber(sessionId);
+    setInvoiceNumber(activeSessionId);
     
-    // Auto-save session details to local storage upon landing
-    setSessionId(sessionId);
+    // Auto-save session details to local storage upon landing if they arrived via URL
+    if (sessionId) setSessionId(sessionId);
     if (tierParam) setTier(tierParam);
 
-  }, [sessionId, tierParam, setSessionId, setTier, navigate]);
+  }, [sessionId, storedSessionId, tierParam, setSessionId, setTier, navigate]);
 
   const handleReset = () => {
     reset();
@@ -140,7 +141,8 @@ export default function Confirmation() {
 
   const currentGate = gate || gateParam;
   const currentName = name || nameParam;
-  const showPhysicalTome = tierParam !== 'free';
+  const currentTier = tierParam || storedTier || 'free';
+  const showPhysicalTome = currentTier !== 'free';
 
   const gateToGlyphName: Record<string, string> = {
     N: 'Syla',
@@ -193,7 +195,7 @@ export default function Confirmation() {
             {invoiceNumber}
           </p>
 
-          {showPhysicalTome && (
+          {showPhysicalTome ? (
             <div className="mt-8 pt-8 border-t border-gray-800 text-left">
               <h3 className="text-gray-300 font-serif italic mb-4 text-center">The Physical Tome</h3>
               <p className="text-gray-500 text-sm leading-relaxed mb-6 text-center">
@@ -222,6 +224,21 @@ export default function Confirmation() {
                   VISIT MINDWAVEJA.COM FOR PHYSICAL COPIES
                 </a>
               </div>
+            </div>
+          ) : (
+            <div className="mt-8 pt-8 border-t border-gray-800 text-center">
+              <h3 className="text-gray-300 font-serif italic mb-4">The Physical Tome</h3>
+              <p className="text-gray-500 text-sm leading-relaxed mb-6">
+                Want to hold the truth? You can purchase a physical hardcover copy of The Book of Solobility anytime.
+              </p>
+              <a
+                href="https://mindwaveja.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block w-full px-6 py-3 border border-[#00d0ff] text-[#00d0ff] text-xs uppercase tracking-[0.15em] rounded hover:bg-[#00d0ff] hover:text-black transition-colors duration-300"
+              >
+                REQUEST PHYSICAL COPY AT MINDWAVEJA.COM
+              </a>
             </div>
           )}
 

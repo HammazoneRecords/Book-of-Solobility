@@ -10,20 +10,21 @@ import Dashboard from './pages/Dashboard';
 import Reader from './pages/Reader';
 import BookDesigner from './pages/BookDesigner';
 
+import { Home } from 'lucide-react';
+
 function GlobalNav() {
-  const { reset } = useUserStore();
   const navigate = useNavigate();
 
   return (
     <div className="fixed top-8 left-0 right-0 z-50 flex justify-center pointer-events-none">
       <button
         onClick={() => {
-          reset();
-          navigate('/');
+          navigate('/confirmation');
         }}
-        className="pointer-events-auto text-[10px] uppercase tracking-[0.3em] text-gray-500 hover:text-[#00d0ff] transition-colors duration-500"
+        className="pointer-events-auto p-2 text-gray-500 hover:text-[#00d0ff] transition-colors duration-500"
+        title="Return to Receipt & Confirmation"
       >
-        whatissolob.com
+        <Home className="w-5 h-5 opacity-50 hover:opacity-100 transition-opacity" />
       </button>
     </div>
   );
