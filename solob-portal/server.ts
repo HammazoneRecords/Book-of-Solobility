@@ -340,7 +340,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/create-checkout-session", async (req, res) => {
+  app.post("/api/forge-book", async (req, res) => {
     try {
       const { gate, name, tier } = req.body;
 
@@ -348,21 +348,22 @@ async function startServer() {
       if (tier === 'premium') unitAmount = 9900;
       if (tier === 'free') unitAmount = 0;
 
-      const sessionId = `simulated_${Date.now()}`;
+      // Generate a formal Solobic receipt number
+      const sessionId = `SOLOB-${Math.floor(1000 + Math.random() * 9000)}`;
 
-      // Save to DB immediately for simulation/free tier
+      // Save to DB for tracking offline forgings
       db.prepare(`
         INSERT INTO purchases(session_id, user_name, gate, tier, amount, status)
         VALUES(?, ?, ?, ?, ?, ?)
           `).run(sessionId, name, gate, tier, unitAmount, 'Completed');
 
-      // Simulate a successful checkout by returning the confirmation URL
+      // Return the confirmation URL directly
       res.json({
         url: `/confirmation?session_id=${sessionId}&gate=${gate}&name=${encodeURIComponent(name)}&tier=${tier}`
       });
 
     } catch (error: any) {
-      console.error("Error creating checkout session:", error);
+      console.error("Error forging book:", error);
       res.status(500).json({ error: error.message });
     }
   });

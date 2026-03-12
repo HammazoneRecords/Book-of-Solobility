@@ -115,7 +115,7 @@ export default function Confirmation() {
   const tierParam = searchParams.get('tier');
   const isRestored = searchParams.get('restored') === 'true';
 
-  const { name, gate, reset } = useUserStore();
+  const { name, gate, setSessionId, setTier, reset } = useUserStore();
   const navigate = useNavigate();
   const [invoiceNumber, setInvoiceNumber] = useState('');
 
@@ -125,13 +125,13 @@ export default function Confirmation() {
       return;
     }
 
-    // Generate a unique invoice number based on session ID or random
-    const id = sessionId.startsWith('simulated_')
-      ? sessionId.split('_')[1]
-      : Math.random().toString(36).substring(2, 10).toUpperCase();
+    setInvoiceNumber(sessionId);
+    
+    // Auto-save session details to local storage upon landing
+    setSessionId(sessionId);
+    if (tierParam) setTier(tierParam);
 
-    setInvoiceNumber(`SOLOB-${id}`);
-  }, [sessionId, navigate]);
+  }, [sessionId, tierParam, setSessionId, setTier, navigate]);
 
   const handleReset = () => {
     reset();

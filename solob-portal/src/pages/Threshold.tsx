@@ -14,7 +14,7 @@ export default function Threshold() {
   const [analyticsCode, setAnalyticsCode] = useState('');
   const [isVerifyingAnalytics, setIsVerifyingAnalytics] = useState(false);
 
-  const setName = useUserStore((state) => state.setName);
+  const { name: storedName, gate: storedGate, sessionId: storedSessionId, tier: storedTier, setName } = useUserStore();
   const navigate = useNavigate();
   const controls = useAnimation();
 
@@ -154,7 +154,41 @@ export default function Threshold() {
         </div>
 
         <AnimatePresence mode="wait">
-          {!showLogin ? (
+          {storedSessionId && !showLogin ? (
+            <motion.div
+              key="resume-session"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="w-full flex flex-col items-center space-y-8"
+            >
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-serif italic text-gray-300">Welcome back, {storedName}</h2>
+                <p className="text-[9px] text-gray-500 uppercase tracking-widest text-center">Your path resumes at gate {storedGate}</p>
+              </div>
+              
+              <motion.button
+                onClick={() => navigate(`/reader?session_id=${storedSessionId}&gate=${storedGate}&name=${encodeURIComponent(storedName)}&tier=${storedTier}&restored=true`)}
+                whileHover={{ scale: 1.02, backgroundColor: 'rgba(0, 208, 255, 0.05)' }}
+                whileTap={{ scale: 0.98 }}
+                animate={{ boxShadow: ['0px 0px 0px rgba(0,208,255,0)', '0px 0px 20px rgba(0,208,255,0.4)', '0px 0px 0px rgba(0,208,255,0)'], borderColor: ['rgba(255,255,255,0.1)', 'rgba(0,208,255,0.5)', 'rgba(255,255,255,0.1)'] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="px-8 py-3.5 border border-[#00d0ff]/30 rounded-full text-xs uppercase tracking-[0.2em] text-[#00d0ff] hover:text-white hover:border-[#00d0ff] transition-all duration-500 w-full"
+              >
+                Continue Journey
+              </motion.button>
+              
+              <button
+                onClick={() => {
+                  useUserStore.getState().reset();
+                  window.location.reload();
+                }}
+                className="text-[8px] uppercase tracking-widest text-gray-700 hover:text-amber-500/80 transition-colors mt-4"
+              >
+                Start Anew (Clear Reflection)
+              </button>
+            </motion.div>
+          ) : !showLogin ? (
             <motion.form
               key="start-form"
               initial={{ opacity: 0, y: 10 }}

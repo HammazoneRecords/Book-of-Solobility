@@ -43,7 +43,7 @@ export default function Offering() {
     const tier = mainOption === 'free' ? 'free' : subOption;
 
     try {
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch('/api/forge-book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ gate, name, tier })
