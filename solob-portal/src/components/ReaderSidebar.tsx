@@ -236,7 +236,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
               })}
             </nav>
 
-            <div className="pt-6 border-t border-white/5 flex flex-col max-h-[30vh]">
+            <div className="pt-6 border-t border-white/5 flex flex-col max-h-[50vh]">
               <h3 className="text-[9px] uppercase tracking-[0.6em] text-gray-600 font-sans mb-4">My Anchors</h3>
               {bookmarks.length === 0 ? (
                 <p className="text-[8px] uppercase tracking-widest text-gray-700 italic">No bookmarks saved yet.</p>
