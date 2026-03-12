@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PdfPageRenderer } from './PdfPageRenderer';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
@@ -51,6 +51,8 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
   gate,
   name,
 }) => {
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
   return (
     <main ref={mainScrollRef as any} className="flex-1 flex flex-col items-center pb-32 overflow-y-auto h-screen custom-scrollbar relative">
       {/* Control Bar (Top) */}
@@ -66,14 +68,25 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
           </div>
         </button>
 
-        <button
-          onClick={toggleBookmark}
-          className="pointer-events-auto ml-auto flex items-center gap-2 px-4 py-2 text-[8px] uppercase tracking-[0.3em] transition-all rounded-full border border-white/5 hover:border-[#00d0ff]/30"
-        >
-          <span className={isBookmarked ? 'text-[#00d0ff]' : 'text-gray-500'}>
-            {isBookmarked ? '★ Bookmarked' : '☆ Bookmark'}
-          </span>
-        </button>
+        <div className="pointer-events-auto ml-auto flex items-center gap-3">
+          <button
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            className="flex items-center gap-2 px-4 py-2 text-[8px] uppercase tracking-[0.3em] transition-all rounded-full border border-white/5 hover:border-[#00d0ff]/30"
+            title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            <span className={isDarkMode ? 'text-[#00d0ff]' : 'text-gray-500'}>
+              {isDarkMode ? '☾ Dark' : '☀ Light'}
+            </span>
+          </button>
+          <button
+            onClick={toggleBookmark}
+            className="flex items-center gap-2 px-4 py-2 text-[8px] uppercase tracking-[0.3em] transition-all rounded-full border border-white/5 hover:border-[#00d0ff]/30"
+          >
+            <span className={isBookmarked ? 'text-[#00d0ff]' : 'text-gray-500'}>
+              {isBookmarked ? '★ Bookmarked' : '☆ Bookmark'}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Progress Bar */}
@@ -97,9 +110,18 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.01] via-transparent to-white/[0.03] pointer-events-none rounded-sm" />
 
-          <div className="relative flex-1 flex items-center justify-center">
+          <div
+            className="relative flex-1 flex items-center justify-center transition-all duration-500"
+            style={isDarkMode ? {
+              filter: 'invert(0.92) hue-rotate(180deg)',
+              borderRadius: '4px',
+              overflow: 'hidden'
+            } : undefined}
+          >
             {isLoading || !pdfDoc ? (
-              <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-4 opacity-50">
+              <div className="flex flex-col items-center justify-center min-h-[40vh] space-y-4 opacity-50"
+                style={isDarkMode ? { filter: 'invert(1) hue-rotate(180deg)' } : undefined}
+              >
                 <div className="w-12 h-12 border-t-2 border-[#00d0ff] rounded-full animate-spin" />
                 <p className="text-[10px] uppercase tracking-widest">Opening the Tome...</p>
               </div>
