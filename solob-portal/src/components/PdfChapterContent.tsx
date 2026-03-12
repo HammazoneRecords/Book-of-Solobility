@@ -111,11 +111,10 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
           <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.01] via-transparent to-white/[0.03] pointer-events-none rounded-sm" />
 
           <div
-            className="relative flex-1 flex items-center justify-center transition-all duration-500"
+            className="relative w-full flex-1 flex items-center justify-center transition-all duration-500"
             style={isDarkMode ? {
               filter: 'invert(0.92) hue-rotate(180deg)',
-              borderRadius: '4px',
-              overflow: 'hidden'
+              borderRadius: '4px'
             } : undefined}
           >
             {isLoading || !pdfDoc ? (
