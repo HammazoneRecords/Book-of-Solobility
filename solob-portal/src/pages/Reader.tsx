@@ -1,9 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import * as pdfjsLib from 'pdfjs-dist';
+import type { PDFDocumentProxy } from 'pdfjs-dist';
 import volume0Manifest from '../data/volume0-manifest.json';
 import { ReaderSidebar } from '../components/ReaderSidebar';
-import { ChapterContent } from '../components/ChapterContent';
-import { useSynapse } from '../hooks/useSynapse';
+import { PdfChapterContent } from '../components/PdfChapterContent';
+
+// Configure PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.mjs',
+  import.meta.url
+).toString();
 
 interface ChapterManifestItem {
   id: number;
@@ -23,35 +30,73 @@ const jhanosGates = [
   { name: 'ORON', start: 29, end: 36, label: 'Order & The Creeds' }
 ];
 
+const PDF_URL = '/Book_of_Solobility_V0.pdf';
+
 export default function Reader() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [currentChapter, setCurrentChapter] = useState(0);
-  const [subPage, setSubPage] = useState(0);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [bookmarks, setBookmarks] = useState<{ chapter: number; subPage: number }[]>([]);
-  const [chapterContent, setChapterContent] = useState<string>('');
+  const [currentPdfPage, setCurrentPdfPage] = useState(1);
+  const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
+  const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [bookmarks, setBookmarks] = useState<number[]>([]);
   const mainScrollRef = useRef<HTMLElement>(null);
   const [expandedGates, setExpandedGates] = useState<string[]>([]);
-
-  const {
-    activeSynapse,
-    setActiveSynapse,
-    processContentWithSynapses,
-    handleContentClick
-  } = useSynapse();
 
   const sessionId = searchParams.get('session_id');
   const gate = searchParams.get('gate');
   const name = searchParams.get('name');
 
   const chapters = volume0Manifest as ChapterManifestItem[];
-  const pages = chapterContent.split('<!-- pagebreak -->');
-  const currentContent = pages[subPage] || '';
+
+  // Build a mapping: chapterIndex → first PDF page number (1-indexed)
+  const chapterStartPages = useMemo(() => {
+    const starts: number[] = [];
+    let page = 1;
+    for (const ch of chapters) {
+      starts.push(page);
+      page += ch.pages;
+    }
+    return starts;
+  }, [chapters]);
+
+  // Derive currentChapter and subPage from currentPdfPage
+  const currentChapter = useMemo(() => {
+    for (let i = chapterStartPages.length - 1; i >= 0; i--) {
+      if (currentPdfPage >= chapterStartPages[i]) return i;
+    }
+    return 0;
+  }, [currentPdfPage, chapterStartPages]);
+
+  const subPage = useMemo(() => {
+    return currentPdfPage - chapterStartPages[currentChapter];
+  }, [currentPdfPage, chapterStartPages, currentChapter]);
 
   const currentAmbientGate = jhanosGates.find(g => currentChapter >= g.start && currentChapter <= g.end)?.name || 'SYLA';
 
+  // Load the PDF document
+  useEffect(() => {
+    let cancelled = false;
+    const loadPdf = async () => {
+      setIsLoading(true);
+      try {
+        const doc = await pdfjsLib.getDocument(PDF_URL).promise;
+        if (!cancelled) {
+          setPdfDoc(doc);
+          setTotalPages(doc.numPages);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error('Failed to load PDF:', err);
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    loadPdf();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Gate color theming
   useEffect(() => {
     const gateColors: Record<string, string> = {
       SYLA: 'var(--syla-hc)',
@@ -63,42 +108,23 @@ export default function Reader() {
       TARA: 'var(--tara-hc)',
       ORON: 'var(--oron-hc)',
     };
-
     document.documentElement.style.setProperty('--active-gate-color', `hsl(${gateColors[currentAmbientGate]})`);
   }, [currentAmbientGate]);
 
+  // Auto-open sidebar on wide screens
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth >= 1280) {
       setIsSidebarOpen(true);
     }
   }, []);
 
+  // Load bookmarks from localStorage
   useEffect(() => {
-    const savedBookmarks = localStorage.getItem(`solob_bookmarks_${sessionId}`);
-    if (savedBookmarks) {
-      setBookmarks(JSON.parse(savedBookmarks));
-    }
+    const saved = localStorage.getItem(`solob_bookmarks_pdf_${sessionId}`);
+    if (saved) setBookmarks(JSON.parse(saved));
   }, [sessionId]);
 
-  useEffect(() => {
-    const fetchChapter = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/volume0/${chapters[currentChapter].filename}`);
-        if (!response.ok) throw new Error('Failed to load chapter');
-        const text = await response.text();
-        setChapterContent(text);
-      } catch (error) {
-        console.error(error);
-        setChapterContent('## Error\nFailed to load this chapter. Please check your connection.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchChapter();
-  }, [currentChapter, chapters]);
-
+  // Auto-expand gate in sidebar when navigating
   useEffect(() => {
     const activeGateObj = jhanosGates.find(g => currentChapter >= g.start && currentChapter <= g.end);
     if (activeGateObj) {
@@ -109,47 +135,60 @@ export default function Reader() {
   }, [currentChapter]);
 
   const toggleBookmark = () => {
-    const isBookmarked = bookmarks.some(b => b.chapter === currentChapter && b.subPage === subPage);
+    const isBookmarked = bookmarks.includes(currentPdfPage);
     const newBookmarks = isBookmarked
-      ? bookmarks.filter(b => !(b.chapter === currentChapter && b.subPage === subPage))
-      : [...bookmarks, { chapter: currentChapter, subPage: subPage }].sort((a, b) => {
-        if (a.chapter !== b.chapter) return a.chapter - b.chapter;
-        return a.subPage - b.subPage;
-      });
-
+      ? bookmarks.filter(p => p !== currentPdfPage)
+      : [...bookmarks, currentPdfPage].sort((a, b) => a - b);
     setBookmarks(newBookmarks);
-    localStorage.setItem(`solob_bookmarks_${sessionId}`, JSON.stringify(newBookmarks));
+    localStorage.setItem(`solob_bookmarks_pdf_${sessionId}`, JSON.stringify(newBookmarks));
   };
 
   const nextPage = () => {
-    if (subPage < pages.length - 1) {
-      setSubPage(subPage + 1);
-      mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (currentChapter < chapters.length - 1) {
-      setCurrentChapter(currentChapter + 1);
-      setSubPage(0);
+    if (currentPdfPage < totalPages) {
+      setCurrentPdfPage(currentPdfPage + 1);
       mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const prevPage = () => {
-    if (subPage > 0) {
-      setSubPage(subPage - 1);
-      mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (currentChapter > 0) {
-      const prevChapterIdx = currentChapter - 1;
-      setCurrentChapter(prevChapterIdx);
-      setSubPage(chapters[prevChapterIdx].pages - 1);
+    if (currentPdfPage > 1) {
+      setCurrentPdfPage(currentPdfPage - 1);
       mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
-  const getGlobalPageNumber = (chIdx: number, subIdx: number) => {
-    let count = 0;
-    for (let i = 0; i < chIdx; i++) {
-      count += chapters[i].pages;
+  const navigateToChapter = (idx: number) => {
+    setCurrentPdfPage(chapterStartPages[idx]);
+    if (typeof window !== 'undefined' && window.innerWidth < 1280) {
+      setIsSidebarOpen(false);
     }
-    return count + subIdx + 1;
+    mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToSubPage = (chapterIdx: number, subPageIdx: number) => {
+    setCurrentPdfPage(chapterStartPages[chapterIdx] + subPageIdx);
+    if (typeof window !== 'undefined' && window.innerWidth < 1280) {
+      setIsSidebarOpen(false);
+    }
+    mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const navigateToBookmarkPage = (page: number) => {
+    setCurrentPdfPage(page);
+    if (typeof window !== 'undefined' && window.innerWidth < 1280) {
+      setIsSidebarOpen(false);
+    }
+    mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Convert a PDF page to its chapter index + subPage
+  const pageToChapterInfo = (page: number) => {
+    for (let i = chapterStartPages.length - 1; i >= 0; i--) {
+      if (page >= chapterStartPages[i]) {
+        return { chapter: i, subPage: page - chapterStartPages[i] };
+      }
+    }
+    return { chapter: 0, subPage: 0 };
   };
 
   if (!sessionId || !gate || !name) {
@@ -171,11 +210,14 @@ export default function Reader() {
         navigate={navigate}
         currentAmbientGate={currentAmbientGate}
         currentChapter={currentChapter}
-        setCurrentChapter={setCurrentChapter}
+        setCurrentChapter={navigateToChapter}
         subPage={subPage}
-        setSubPage={setSubPage}
+        setSubPage={(sp: number) => navigateToSubPage(currentChapter, sp)}
         mainScrollRef={mainScrollRef}
-        bookmarks={bookmarks}
+        bookmarks={bookmarks.map(p => {
+          const info = pageToChapterInfo(p);
+          return { chapter: info.chapter, subPage: info.subPage };
+        })}
         sessionId={sessionId}
         gate={gate}
         name={name}
@@ -183,31 +225,29 @@ export default function Reader() {
         jhanosGates={jhanosGates}
         expandedGates={expandedGates}
         setExpandedGates={setExpandedGates}
+        pdfBookmarks={bookmarks}
+        onBookmarkClick={navigateToBookmarkPage}
       />
 
-      <ChapterContent
+      <PdfChapterContent
         mainScrollRef={mainScrollRef}
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         toggleBookmark={toggleBookmark}
-        bookmarks={bookmarks}
-        currentChapter={currentChapter}
-        subPage={subPage}
-        globalPageNumber={getGlobalPageNumber(currentChapter, subPage)}
+        isBookmarked={bookmarks.includes(currentPdfPage)}
+        currentPdfPage={currentPdfPage}
+        totalPages={totalPages}
         isLoading={isLoading}
-        processContentWithSynapses={processContentWithSynapses}
-        currentContent={currentContent}
-        handleContentClick={handleContentClick}
+        pdfDoc={pdfDoc}
         prevPage={prevPage}
         nextPage={nextPage}
-        pages={pages}
         chapters={chapters}
+        currentChapter={currentChapter}
+        subPage={subPage}
         navigate={navigate}
         sessionId={sessionId}
         gate={gate}
         name={name}
-        activeSynapse={activeSynapse}
-        setActiveSynapse={setActiveSynapse}
       />
     </div>
   );

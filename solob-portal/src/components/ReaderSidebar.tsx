@@ -27,6 +27,8 @@ interface ReaderSidebarProps {
   jhanosGates: { name: string; start: number; end: number; label: string }[];
   expandedGates: string[];
   setExpandedGates: React.Dispatch<React.SetStateAction<string[]>>;
+  pdfBookmarks?: number[];
+  onBookmarkClick?: (page: number) => void;
 }
 
 export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
@@ -46,7 +48,9 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
   chapters,
   jhanosGates,
   expandedGates,
-  setExpandedGates
+  setExpandedGates,
+  pdfBookmarks,
+  onBookmarkClick
 }) => {
   const getGlobalPageNumber = (chIdx: number, subIdx: number) => {
     let count = 0;
@@ -231,35 +235,62 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
                 <p className="text-[8px] uppercase tracking-widest text-gray-700 italic">No bookmarks saved yet.</p>
               ) : (
                 <div className="space-y-2 overflow-y-auto custom-scrollbar pr-2 pb-4">
-                  {bookmarks.map((b, idx) => {
-                    const ch = chapters[b.chapter];
-                    return (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setCurrentChapter(b.chapter);
-                          setSubPage(b.subPage);
-                          if (typeof window !== 'undefined' && window.innerWidth < 1280) setIsSidebarOpen(false);
-                          mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-                        }}
-                        className="w-full text-left group flex flex-col p-2 rounded-sm hover:bg-white/5 transition-colors border border-transparent hover:border-white/5"
-                      >
-                        <span className="text-[8px] font-sans text-[#00d0ff] mb-1">
-                          Page {getGlobalPageNumber(b.chapter, b.subPage)}
-                        </span>
-                        <span className="text-[11px] text-gray-500 group-hover:text-white font-serif line-clamp-1 italic">
-                          {ch ? ch.title : 'Untitled'}
-                        </span>
-                      </button>
-                    );
-                  })}
+                  {pdfBookmarks && onBookmarkClick ? (
+                    pdfBookmarks.map((page, idx) => {
+                      // Find which chapter this page belongs to
+                      let chIdx = 0;
+                      let pageAcc = 0;
+                      for (let i = 0; i < chapters.length; i++) {
+                        if (page <= pageAcc + chapters[i].pages) { chIdx = i; break; }
+                        pageAcc += chapters[i].pages;
+                      }
+                      const ch = chapters[chIdx];
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => onBookmarkClick(page)}
+                          className="w-full text-left group flex flex-col p-2 rounded-sm hover:bg-white/5 transition-colors border border-transparent hover:border-white/5"
+                        >
+                          <span className="text-[8px] font-sans text-[#00d0ff] mb-1">
+                            Page {page}
+                          </span>
+                          <span className="text-[11px] text-gray-500 group-hover:text-white font-serif line-clamp-1 italic">
+                            {ch ? ch.title : 'Untitled'}
+                          </span>
+                        </button>
+                      );
+                    })
+                  ) : (
+                    bookmarks.map((b, idx) => {
+                      const ch = chapters[b.chapter];
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => {
+                            setCurrentChapter(b.chapter);
+                            setSubPage(b.subPage);
+                            if (typeof window !== 'undefined' && window.innerWidth < 1280) setIsSidebarOpen(false);
+                            mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                          }}
+                          className="w-full text-left group flex flex-col p-2 rounded-sm hover:bg-white/5 transition-colors border border-transparent hover:border-white/5"
+                        >
+                          <span className="text-[8px] font-sans text-[#00d0ff] mb-1">
+                            Page {getGlobalPageNumber(b.chapter, b.subPage)}
+                          </span>
+                          <span className="text-[11px] text-gray-500 group-hover:text-white font-serif line-clamp-1 italic">
+                            {ch ? ch.title : 'Untitled'}
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
               )}
 
               <div className="mt-6 pt-4 border-t border-white/5">
                 <a
-                  href="/Book_of_Solobility_Volume_0.pdf"
-                  download="Book_of_Solobility_Volume_0.pdf"
+                  href="/Book_of_Solobility_V0.pdf"
+                  download="Book_of_Solobility_V0.pdf"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded border border-white/10 hover:border-[#00d0ff]/50 hover:bg-[#00d0ff]/10 text-gray-400 hover:text-[#00d0ff] transition-all group"

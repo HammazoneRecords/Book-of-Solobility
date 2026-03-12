@@ -15,6 +15,9 @@ export default defineConfig(({mode}) => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    optimizeDeps: {
+      include: ['pdfjs-dist'],
+    },
     server: {
       hmr: process.env.DISABLE_HMR !== 'true',
       proxy: {
