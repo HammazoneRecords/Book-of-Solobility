@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+:root {
+  /* Solobic Gate Colors */
+  --syla-hc: 190 100% 50%; /* #00d0ff Cool Cyan */
+  --zayn-hc: 280 100% 60%; /* #b300ff Deep Purple */
+  --lomi-hc: 140 100% 45%; /* #00e65c Emerald Green */
+  --vorak-hc: 30 100% 50%; /* #ff8000 Solar Orange */
+  --khem-hc: 0 100% 50%;   /* #ff0000 Burning Crimson */
+  --bara-hc: 220 100% 60%; /* #3366ff Structural Blue */
+  --tara-hc: 320 100% 65%; /* #ff4dff Magenta Pink */
+  --oron-hc: 50 100% 50%;  /* #ffd700 Golden Yellow */
+
+  --active-gate-color: hsl(var(--syla-hc)); /* Default to Syla */
+}
+
+@keyframes shimmer {
+  0% { opacity: 0.7; filter: drop-shadow(0 0 5px var(--active-gate-color)); }
+  50% { opacity: 1; filter: drop-shadow(0 0 15px var(--active-gate-color)); }
+  100% { opacity: 0.7; filter: drop-shadow(0 0 5px var(--active-gate-color)); }
+}
+
+.shimmer-text {
+  animation: shimmer 3s infinite ease-in-out;
+  color: var(--active-gate-color);
+  text-shadow: 0 0 10px var(--active-gate-color);
+}
+
+.synapse-term {
+  cursor: pointer;
+  border-bottom: 1px dotted rgba(255,255,255,0.3);
+  transition: all 0.3s ease;
+}
+
+.synapse-term:hover {
+  color: var(--active-gate-color);
+  border-bottom-color: var(--active-gate-color);
+  text-shadow: 0 0 8px var(--active-gate-color);
+}
+
+/* Global Scrollbar Theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 208, 255, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 208, 255, 0.4);
+}
+
+/* Custom Scrollbar Utility */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 208, 255, 0.1);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 208, 255, 0.3);
+}

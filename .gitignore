@@ -1,0 +1,23 @@
+# ============================================
+# GITIGNORE — Book of Solobility
+# Only the solob-portal gets GitHub'd.
+# ============================================
+
+# Ignore everything at root
+/*
+
+# Allow these essential git/repo files
+!.gitignore
+!.gitattributes
+!README.md
+
+# Allow the entire solob-portal directory
+!solob-portal/
+
+# Ignore build artifacts and deps INSIDE solob-portal
+solob-portal/node_modules/
+solob-portal/.next/
+solob-portal/out/
+solob-portal/.env
+solob-portal/.env.local
+solob-portal/.env*.local
