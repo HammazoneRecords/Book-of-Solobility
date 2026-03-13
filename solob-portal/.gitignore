@@ -7,3 +7,4 @@ coverage/
 .env*
 !.env.example
 solobility.db
+VPS_COMMANDS.md
