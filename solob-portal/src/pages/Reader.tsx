@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import * as pdfjsLib from 'pdfjs-dist';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import volume0Manifest from '../data/volume0-manifest.json';
+import { ReaderSidebar } from '../components/ReaderSidebar';
 import { PdfChapterContent } from '../components/PdfChapterContent';
 
 // Configure PDF.js worker
@@ -28,8 +29,7 @@ const jhanosGates = [
   { name: 'TARA', start: 24, end: 28, label: 'Nurturance & Mirror-Keeping' },
   { name: 'ORON', start: 29, end: 36, label: 'Order & The Creeds' }
 ];
-
-const PDF_URL = '/Book_of_Solobility_V0.pdf';
+const PDF_URL = '/book-of-solobility-v0-ca620f6a_c.pdf';
 
 export default function Reader() {
   const [searchParams] = useSearchParams();
@@ -38,8 +38,9 @@ export default function Reader() {
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [bookmarks, setBookmarks] = useState<number[]>([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const mainScrollRef = useRef<HTMLElement>(null);
+  const [expandedGates, setExpandedGates] = useState<string[]>([]);
 
   const sessionId = searchParams.get('session_id');
   const gate = searchParams.get('gate');
@@ -207,20 +208,22 @@ export default function Reader() {
     document.documentElement.style.setProperty('--active-gate-color', `hsl(${gateColors[currentAmbientGate]})`);
   }, [currentAmbientGate]);
 
-  // Load bookmarks from localStorage
+  // Auto-open sidebar on wide screens
   useEffect(() => {
-    const saved = localStorage.getItem(`solob_bookmarks_pdf_${sessionId}`);
-    if (saved) setBookmarks(JSON.parse(saved));
-  }, [sessionId]);
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setIsSidebarOpen(true);
+    }
+  }, []);
 
-  const toggleBookmark = () => {
-    const isBookmarked = bookmarks.includes(currentPdfPage);
-    const newBookmarks = isBookmarked
-      ? bookmarks.filter(p => p !== currentPdfPage)
-      : [...bookmarks, currentPdfPage].sort((a, b) => a - b);
-    setBookmarks(newBookmarks);
-    localStorage.setItem(`solob_bookmarks_pdf_${sessionId}`, JSON.stringify(newBookmarks));
-  };
+  // Auto-expand gate in sidebar when navigating
+  useEffect(() => {
+    const activeGateObj = jhanosGates.find(g => currentChapter >= g.start && currentChapter <= g.end);
+    if (activeGateObj) {
+      setExpandedGates(prev =>
+        prev.includes(activeGateObj.name) ? prev : [...prev, activeGateObj.name]
+      );
+    }
+  }, [currentChapter]);
 
   const nextPage = () => {
     if (currentPdfPage < totalPages) {
@@ -238,16 +241,17 @@ export default function Reader() {
 
   const navigateToChapter = (idx: number) => {
     setCurrentPdfPage(chapterStartPages[idx]);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
     mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToSubPage = (chapterIdx: number, subPageIdx: number) => {
     setCurrentPdfPage(chapterStartPages[chapterIdx] + subPageIdx);
-    mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const navigateToBookmarkPage = (page: number) => {
-    setCurrentPdfPage(page);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
     mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -274,10 +278,29 @@ export default function Reader() {
     <div className="min-h-screen bg-[#050505] text-gray-200 font-serif relative overflow-hidden flex">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,rgba(0,208,255,0.03)_0%,transparent_80%)] pointer-events-none" />
 
+      <ReaderSidebar
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        navigate={navigate}
+        currentAmbientGate={currentAmbientGate}
+        currentChapter={currentChapter}
+        setCurrentChapter={navigateToChapter}
+        subPage={subPage}
+        setSubPage={(ch: number, sp: number) => navigateToSubPage(ch, sp)}
+        mainScrollRef={mainScrollRef}
+        sessionId={sessionId}
+        gate={gate}
+        name={name}
+        chapters={chapters}
+        jhanosGates={jhanosGates}
+        expandedGates={expandedGates}
+        setExpandedGates={setExpandedGates}
+      />
+
       <PdfChapterContent
         mainScrollRef={mainScrollRef}
-        toggleBookmark={toggleBookmark}
-        isBookmarked={bookmarks.includes(currentPdfPage)}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
         currentPdfPage={currentPdfPage}
         totalPages={totalPages}
         isLoading={isLoading}
@@ -286,7 +309,6 @@ export default function Reader() {
         nextPage={nextPage}
         chapters={chapters}
         currentChapter={currentChapter}
-        setCurrentChapter={navigateToChapter}
         subPage={subPage}
         navigate={navigate}
         sessionId={sessionId}

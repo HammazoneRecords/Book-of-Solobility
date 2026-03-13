@@ -19,7 +19,7 @@ const DownloadPyramid = ({ gate }: { gate: string | null }) => {
       setHasSpun(true);
       // Download the actual PDF
       const link = document.createElement('a');
-      link.href = '/Book_of_Solobility_V0.pdf';
+      link.href = '/book-of-solobility-v0-ca620f6a_c.pdf';
       link.download = 'The_Book_of_Solobility_V0.pdf';
       document.body.appendChild(link);
       link.click();
