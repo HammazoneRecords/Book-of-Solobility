@@ -312,6 +312,18 @@ export default function Confirmation() {
           >
             Download Invoice
           </button>
+          
+          <button
+            onClick={() => {
+              if (window.confirm("Are you sure you want to clear your current reflection and start over?")) {
+                reset();
+                navigate('/');
+              }
+            }}
+            className="text-[8px] uppercase tracking-widest text-[#00d0ff]/50 hover:text-amber-500/80 transition-colors mt-8"
+          >
+            Start Anew (Clear Reflection)
+          </button>
         </div>
       </motion.div>
     </div>
