@@ -12,8 +12,8 @@ interface ChapterManifestItem {
 
 interface PdfChapterContentProps {
   mainScrollRef: React.RefObject<HTMLElement | null>;
-  toggleBookmark: () => void;
-  isBookmarked: boolean;
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: (open: boolean) => void;
   currentPdfPage: number;
   totalPages: number;
   isLoading: boolean;
@@ -22,7 +22,6 @@ interface PdfChapterContentProps {
   nextPage: () => void;
   chapters: ChapterManifestItem[];
   currentChapter: number;
-  setCurrentChapter: (idx: number) => void;
   subPage: number;
   navigate: (path: string) => void;
   sessionId: string;
@@ -36,8 +35,8 @@ const ZOOM_STEP = 0.25;
 
 export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
   mainScrollRef,
-  toggleBookmark,
-  isBookmarked,
+  isSidebarOpen,
+  setIsSidebarOpen,
   currentPdfPage,
   totalPages,
   isLoading,
@@ -46,7 +45,6 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
   nextPage,
   chapters,
   currentChapter,
-  setCurrentChapter,
   subPage,
   navigate,
   sessionId,
@@ -123,23 +121,18 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
       (contentRef as any).current = el;
     }} className="flex-1 flex flex-col items-center overflow-y-auto h-screen custom-scrollbar relative bg-[#050505] px-4">
       {/* Control Bar (Top) */}
-      <div className="fixed top-0 left-0 h-14 w-full flex items-center justify-between px-4 md:px-8 z-40 bg-gradient-to-b from-black/90 via-black/60 to-transparent pointer-events-none transition-all duration-300">
+      <div className={`fixed top-0 left-0 h-14 flex items-center justify-between px-4 md:px-8 z-40 bg-gradient-to-b from-black/90 via-black/60 to-transparent pointer-events-none transition-all duration-300 ${isSidebarOpen ? 'w-full lg:w-[calc(100%-320px)] lg:left-[320px]' : 'w-full left-0'}`}>
         {/* Left: Hamburger */}
-        {/* Left: Chapter Navigation */}
-        <div className="pointer-events-auto flex items-center gap-4">
-          <select
-            value={currentChapter}
-            onChange={(e) => setCurrentChapter(Number(e.target.value))}
-            className="w-48 sm:w-64 bg-black/50 border border-white/10 text-[10px] md:text-xs text-gray-300 p-2 rounded focus:outline-none focus:border-[#00d0ff]/50 uppercase tracking-widest cursor-pointer"
-            title="Navigate Chapters"
-          >
-            {chapters.map((ch, idx) => (
-              <option key={ch.id} value={idx}>
-                {String(idx).padStart(2, '0')} — {ch.title}
-              </option>
-            ))}
-          </select>
-        </div>
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className={`pointer-events-auto w-12 h-12 p-2 -m-2 flex items-center justify-center text-gray-500 hover:text-[#00d0ff] transition-all group ${isSidebarOpen ? 'hidden' : 'flex'}`}
+        >
+          <div className="space-y-1.5">
+            <div className="w-5 h-0.5 bg-current transition-all group-hover:w-6" />
+            <div className="w-4 h-0.5 bg-current transition-all group-hover:w-6" />
+            <div className="w-6 h-0.5 bg-current transition-all group-hover:w-6" />
+          </div>
+        </button>
 
         {/* Right: Controls */}
         <div className="pointer-events-auto ml-auto flex items-center gap-1 md:gap-2 flex-wrap justify-end">
@@ -181,15 +174,7 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
             </span>
           </button>
 
-          {/* Bookmark */}
-          <button
-            onClick={toggleBookmark}
-            className="flex items-center gap-2 px-3 py-2 text-[8px] uppercase tracking-[0.3em] transition-all rounded-full border border-white/5 hover:border-[#00d0ff]/30 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 justify-center"
-          >
-            <span className={isBookmarked ? 'text-[#00d0ff]' : 'text-gray-500'}>
-              {isBookmarked ? '★' : '☆'}
-            </span>
-          </button>
+
 
           {/* Fullscreen */}
           <button
@@ -205,7 +190,7 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
       </div>
 
       {/* Progress Bar */}
-      <div className="fixed top-0 z-50 h-1 bg-gray-900 transition-all duration-300 w-full left-0">
+      <div className={`fixed top-0 z-50 h-1 bg-gray-900 transition-all duration-300 ${isSidebarOpen ? 'w-full lg:w-[calc(100%-320px)] lg:left-[320px]' : 'w-full left-0'}`}>
         <motion.div
           className="h-full bg-[#00d0ff]"
           initial={{ width: 0 }}
