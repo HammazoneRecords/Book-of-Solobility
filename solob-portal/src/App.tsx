@@ -16,12 +16,12 @@ function GlobalNav() {
   const navigate = useNavigate();
 
   return (
-    <div className="fixed top-8 left-0 right-0 z-50 flex justify-center pointer-events-none">
+    <div className="fixed top-4 sm:top-8 right-4 sm:right-auto sm:left-0 sm:right-0 z-50 flex sm:justify-center pointer-events-none">
       <button
         onClick={() => {
           navigate('/confirmation');
         }}
-        className="pointer-events-auto p-2 text-gray-500 hover:text-[#00d0ff] transition-colors duration-500"
+        className="pointer-events-auto p-2.5 sm:p-2 text-gray-500 hover:text-[#00d0ff] transition-colors duration-500 min-w-[44px] min-h-[44px] flex items-center justify-center"
         title="Return to Receipt & Confirmation"
       >
         <Home className="w-5 h-5 opacity-50 hover:opacity-100 transition-opacity" />

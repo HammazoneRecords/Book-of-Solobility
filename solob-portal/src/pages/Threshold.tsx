@@ -106,7 +106,7 @@ export default function Threshold() {
         initial={{ scale: 1, opacity: 0.1, rotate: 0 }}
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
       >
-        <div className="w-[100vw] h-[100vw] max-w-[1000px] max-h-[1000px] rounded-full bg-[radial-gradient(circle_at_center,rgba(0,208,255,0.15)_0%,transparent_70%)] blur-3xl" />
+        <div className="w-[80vw] h-[80vw] max-w-[1000px] max-h-[1000px] rounded-full bg-[radial-gradient(circle_at_center,rgba(0,208,255,0.15)_0%,transparent_70%)] blur-3xl" />
       </motion.div>
 
       {/* Secondary reactive orb */}
@@ -118,7 +118,7 @@ export default function Threshold() {
           y: Math.cos(inputName.length) * 20,
         }}
         transition={{ duration: 2, ease: "easeInOut" }}
-        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[radial-gradient(circle_at_center,rgba(0,208,255,0.2)_0%,transparent_60%)] blur-3xl pointer-events-none"
+        className="absolute top-1/4 left-1/4 w-48 h-48 md:w-96 md:h-96 rounded-full bg-[radial-gradient(circle_at_center,rgba(0,208,255,0.2)_0%,transparent_60%)] blur-3xl pointer-events-none"
       />
 
       {/* Tertiary reactive orb */}
@@ -130,19 +130,19 @@ export default function Threshold() {
           y: Math.sin(inputName.length) * -30,
         }}
         transition={{ duration: 2.5, ease: "easeInOut" }}
-        className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[radial-gradient(circle_at_center,rgba(0,208,255,0.15)_0%,transparent_60%)] blur-3xl pointer-events-none"
+        className="absolute bottom-1/4 right-1/4 w-48 h-48 md:w-96 md:h-96 rounded-full bg-[radial-gradient(circle_at_center,rgba(0,208,255,0.15)_0%,transparent_60%)] blur-3xl pointer-events-none"
       />
 
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.5, ease: "easeOut" }}
-        className="z-10 w-full max-w-lg flex flex-col items-center p-12 md:p-16 rounded-3xl bg-black/40 backdrop-blur-2xl border border-white/5 shadow-[0_0_80px_rgba(0,208,255,0.05)] relative overflow-hidden"
+        className="z-10 w-full max-w-lg flex flex-col items-center p-6 sm:p-12 md:p-16 rounded-3xl bg-black/40 backdrop-blur-2xl border border-white/5 shadow-[0_0_80px_rgba(0,208,255,0.05)] relative overflow-hidden"
       >
         <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />
-        <div className="relative mb-16 w-full flex justify-center">
+        <div className="relative mb-10 sm:mb-16 w-full flex justify-center">
           <motion.h1
-            className="text-4xl md:text-5xl font-light tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 text-center"
+            className="text-3xl sm:text-4xl md:text-5xl font-light tracking-[0.15em] sm:tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-b from-white to-gray-500 text-center"
             animate={{ opacity: [0.8, 1, 0.8] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             style={{ textShadow: '0 0 30px rgba(0, 208, 255, 0.2)' }}
@@ -256,7 +256,7 @@ export default function Threshold() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.3 }}
         whileHover={{ opacity: 0.8 }}
-        className="absolute bottom-8 right-8 z-20 flex flex-col items-end gap-3"
+        className="absolute bottom-4 right-4 sm:bottom-8 sm:right-8 z-20 flex flex-col items-end gap-3"
       >
         <AnimatePresence>
           {showAnalyticsInput && (

@@ -93,28 +93,28 @@ export default function BookDesigner() {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-gray-200 p-8 pt-20 flex flex-col">
+        <div className="min-h-screen bg-[#050505] text-gray-200 p-4 sm:p-8 pt-16 sm:pt-20 flex flex-col">
             <div className="max-w-screen-2xl mx-auto w-full flex-1 flex flex-col">
-                <div className="flex justify-between items-center mb-8 border-b border-gray-800 pb-6 shrink-0">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 border-b border-gray-800 pb-6 shrink-0 gap-4">
                     <div>
                         <button onClick={() => navigate('/dashboard')} className="flex items-center text-gray-500 hover:text-[#00d0ff] transition-colors text-sm mb-4">
                             <ChevronLeft className="w-4 h-4 mr-1" />
                             Back to Dashboard
                         </button>
-                        <h1 className="text-3xl font-serif text-white flex items-center gap-3">
+                        <h1 className="text-xl sm:text-3xl font-serif text-white flex items-center gap-3">
                             <Layout className="w-8 h-8 text-[#00d0ff]" />
                             Live Paginator CMS
                         </h1>
                         <p className="text-gray-500 mt-2 text-[10px] uppercase tracking-[0.2em] font-medium">Authoring & Pagination Visualizer</p>
                     </div>
 
-                    <div className="flex gap-4 items-center bg-gray-900/50 p-4 rounded-lg border border-gray-800">
+                    <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center bg-gray-900/50 p-4 rounded-lg border border-gray-800">
                         <div className="flex flex-col">
                             <label className="text-[10px] uppercase tracking-widest text-[#00d0ff] mb-2 font-semibold">Active Document</label>
                             <select
                                 value={selectedChapter}
                                 onChange={(e) => setSelectedChapter(e.target.value)}
-                                className="bg-black border border-gray-700/50 rounded px-4 py-2 text-sm focus:border-[#00d0ff] focus:outline-none text-gray-300 w-64 appearance-none"
+                                className="bg-black border border-gray-700/50 rounded px-4 py-2 text-sm focus:border-[#00d0ff] focus:outline-none text-gray-300 w-full sm:w-64 appearance-none"
                             >
                                 <option value="">-- Select Chapter --</option>
                                 {chapters.map(ch => (
@@ -125,7 +125,7 @@ export default function BookDesigner() {
                         <button
                             onClick={handleSave}
                             disabled={!selectedChapter || isSaving || isLoading}
-                            className="bg-[#00d0ff]/10 text-[#00d0ff] border border-[#00d0ff]/30 px-6 py-2 rounded flex items-center gap-2 hover:bg-[#00d0ff] hover:text-black transition-all ml-4 disabled:opacity-50 disabled:cursor-not-allowed h-[38px] mt-[18px]"
+                            className="bg-[#00d0ff]/10 text-[#00d0ff] border border-[#00d0ff]/30 px-6 py-2 rounded flex items-center justify-center gap-2 hover:bg-[#00d0ff] hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed h-[38px]"
                         >
                             {isSaving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                             {isSaving ? 'Saving...' : 'Save to Disk'}

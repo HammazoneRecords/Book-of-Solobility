@@ -73,11 +73,11 @@ export default function Offering() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1.5, ease: "easeOut" }}
-        className="z-10 w-full max-w-5xl flex flex-col md:flex-row items-center justify-center gap-12"
+        className="z-10 w-full max-w-5xl flex flex-col items-center justify-center gap-8 md:flex-row md:gap-12"
       >
         {/* Book Mockup */}
         <motion.div
-          className="relative w-72 h-[28rem] bg-[#111] rounded-r-xl rounded-l-sm shadow-2xl border border-gray-800 overflow-hidden flex-shrink-0 group"
+          className="relative w-52 h-[20rem] sm:w-72 sm:h-[28rem] bg-[#111] rounded-r-xl rounded-l-sm shadow-2xl border border-gray-800 overflow-hidden flex-shrink-0 group"
           whileHover={{ rotateY: -10, rotateX: 5, scale: 1.05 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
           style={{ transformStyle: 'preserve-3d', perspective: '1200px', boxShadow: '20px 20px 50px rgba(0,0,0,0.5), inset 2px 0 5px rgba(255,255,255,0.1)' }}
@@ -91,7 +91,7 @@ export default function Offering() {
           <div className="absolute inset-0 flex flex-col items-center justify-between py-12 px-6 z-10">
             <div className="text-center">
               <h2 className="text-gray-500 uppercase tracking-[0.3em] text-xs mb-2">The Book of</h2>
-              <h1 className="text-2xl font-bold text-gray-200 tracking-widest uppercase">SOLOBILITY</h1>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-200 tracking-widest uppercase">SOLOBILITY</h1>
             </div>
 
             <div className="my-8 flex-1 flex items-center justify-center">
@@ -112,7 +112,7 @@ export default function Offering() {
 
         {/* Purchase Details */}
         <div className="flex flex-col items-center md:items-start text-center md:text-left max-w-xl w-full">
-          <h2 className="text-3xl font-light tracking-widest text-gray-200 mb-2">Your Reflection is Ready</h2>
+          <h2 className="text-2xl sm:text-3xl font-light tracking-widest text-gray-200 mb-2">Your Reflection is Ready</h2>
           <p className="text-xl text-[#00d0ff] font-serif italic mb-6">
             The Book of Solobility: {glyphName} Edition
           </p>

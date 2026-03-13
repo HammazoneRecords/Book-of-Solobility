@@ -3,7 +3,6 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import * as pdfjsLib from 'pdfjs-dist';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import volume0Manifest from '../data/volume0-manifest.json';
-import { ReaderSidebar } from '../components/ReaderSidebar';
 import { PdfChapterContent } from '../components/PdfChapterContent';
 
 // Configure PDF.js worker
@@ -39,10 +38,8 @@ export default function Reader() {
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [bookmarks, setBookmarks] = useState<number[]>([]);
   const mainScrollRef = useRef<HTMLElement>(null);
-  const [expandedGates, setExpandedGates] = useState<string[]>([]);
 
   const sessionId = searchParams.get('session_id');
   const gate = searchParams.get('gate');
@@ -210,28 +207,11 @@ export default function Reader() {
     document.documentElement.style.setProperty('--active-gate-color', `hsl(${gateColors[currentAmbientGate]})`);
   }, [currentAmbientGate]);
 
-  // Auto-open sidebar on wide screens
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth >= 1280) {
-      setIsSidebarOpen(true);
-    }
-  }, []);
-
   // Load bookmarks from localStorage
   useEffect(() => {
     const saved = localStorage.getItem(`solob_bookmarks_pdf_${sessionId}`);
     if (saved) setBookmarks(JSON.parse(saved));
   }, [sessionId]);
-
-  // Auto-expand gate in sidebar when navigating
-  useEffect(() => {
-    const activeGateObj = jhanosGates.find(g => currentChapter >= g.start && currentChapter <= g.end);
-    if (activeGateObj) {
-      setExpandedGates(prev =>
-        prev.includes(activeGateObj.name) ? prev : [...prev, activeGateObj.name]
-      );
-    }
-  }, [currentChapter]);
 
   const toggleBookmark = () => {
     const isBookmarked = bookmarks.includes(currentPdfPage);
@@ -258,25 +238,16 @@ export default function Reader() {
 
   const navigateToChapter = (idx: number) => {
     setCurrentPdfPage(chapterStartPages[idx]);
-    if (typeof window !== 'undefined' && window.innerWidth < 1280) {
-      setIsSidebarOpen(false);
-    }
     mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToSubPage = (chapterIdx: number, subPageIdx: number) => {
     setCurrentPdfPage(chapterStartPages[chapterIdx] + subPageIdx);
-    if (typeof window !== 'undefined' && window.innerWidth < 1280) {
-      setIsSidebarOpen(false);
-    }
     mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const navigateToBookmarkPage = (page: number) => {
     setCurrentPdfPage(page);
-    if (typeof window !== 'undefined' && window.innerWidth < 1280) {
-      setIsSidebarOpen(false);
-    }
     mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -303,35 +274,8 @@ export default function Reader() {
     <div className="min-h-screen bg-[#050505] text-gray-200 font-serif relative overflow-hidden flex">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_center,rgba(0,208,255,0.03)_0%,transparent_80%)] pointer-events-none" />
 
-      <ReaderSidebar
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
-        navigate={navigate}
-        currentAmbientGate={currentAmbientGate}
-        currentChapter={currentChapter}
-        setCurrentChapter={navigateToChapter}
-        subPage={subPage}
-        setSubPage={(ch: number, sp: number) => navigateToSubPage(ch, sp)}
-        mainScrollRef={mainScrollRef}
-        bookmarks={bookmarks.map(p => {
-          const info = pageToChapterInfo(p);
-          return { chapter: info.chapter, subPage: info.subPage };
-        })}
-        sessionId={sessionId}
-        gate={gate}
-        name={name}
-        chapters={chapters}
-        jhanosGates={jhanosGates}
-        expandedGates={expandedGates}
-        setExpandedGates={setExpandedGates}
-        pdfBookmarks={bookmarks}
-        onBookmarkClick={navigateToBookmarkPage}
-      />
-
       <PdfChapterContent
         mainScrollRef={mainScrollRef}
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
         toggleBookmark={toggleBookmark}
         isBookmarked={bookmarks.includes(currentPdfPage)}
         currentPdfPage={currentPdfPage}
@@ -342,6 +286,7 @@ export default function Reader() {
         nextPage={nextPage}
         chapters={chapters}
         currentChapter={currentChapter}
+        setCurrentChapter={navigateToChapter}
         subPage={subPage}
         navigate={navigate}
         sessionId={sessionId}

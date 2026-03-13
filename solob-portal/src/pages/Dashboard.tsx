@@ -19,7 +19,7 @@ const gateToGlyphName: Record<string, string> = {
 };
 
 const StatCard = ({ title, value, change, icon: Icon, trend }: any) => (
-  <div className="bg-[#111] border border-gray-800 p-6 rounded-lg shadow-xl">
+  <div className="bg-[#111] border border-gray-800 p-4 sm:p-6 rounded-lg shadow-xl">
     <div className="flex items-center justify-between mb-4">
       <div className="p-2 bg-[#00d0ff]/10 rounded-lg">
         <Icon className="w-6 h-6 text-[#00d0ff]" />
@@ -32,7 +32,7 @@ const StatCard = ({ title, value, change, icon: Icon, trend }: any) => (
       )}
     </div>
     <h3 className="text-gray-500 text-xs uppercase tracking-widest mb-1">{title}</h3>
-    <p className="text-2xl font-bold text-gray-200 tracking-tight">{value}</p>
+    <p className="text-xl sm:text-2xl font-bold text-gray-200 tracking-tight">{value}</p>
   </div>
 );
 
@@ -65,15 +65,15 @@ export default function Dashboard() {
   })) || [];
 
   return (
-    <div className="min-h-screen bg-[#050505] p-8">
+    <div className="min-h-screen bg-[#050505] p-4 sm:p-8">
       <div className="max-w-7xl mx-auto">
         <header className="mb-12 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-light tracking-widest text-gray-200 mb-2 uppercase">System Control</h1>
+            <h1 className="text-xl sm:text-3xl font-light tracking-widest text-gray-200 mb-2 uppercase">System Control</h1>
             <p className="text-gray-500 font-serif italic">Administrative interface for The Book of Solobility</p>
           </div>
 
-          <div className="flex items-center bg-[#111] border border-gray-800 p-1 rounded-lg">
+          <div className="flex items-center bg-[#111] border border-gray-800 p-1 rounded-lg overflow-x-auto">
             <button
               onClick={() => setActiveView('analytics')}
               className={`flex items-center gap-2 px-4 py-2 text-[10px] uppercase tracking-widest rounded transition-all ${activeView === 'analytics' ? 'bg-[#00d0ff] text-black font-bold' : 'text-gray-500 hover:text-gray-300'}`}
@@ -114,7 +114,7 @@ export default function Dashboard() {
             transition={{ duration: 0.5 }}
           >
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
               <StatCard title="Total Conversions" value={stats?.totalConversions || 0} icon={Users} trend="up" />
               <StatCard title="Gross Revenue" value={`$${stats?.totalRevenue?.toLocaleString() || 0}`} icon={DollarSign} trend="up" />
               <StatCard title="Books Forged" value={stats?.totalConversions || 0} icon={BookOpen} trend="up" />
@@ -122,7 +122,7 @@ export default function Dashboard() {
             </div>
 
             {/* Reading Analytics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
               <StatCard title="Total Readers" value={stats?.reading?.totalReaders || 0} icon={Eye} trend="up" />
               <StatCard title="Avg Read Time" value={`${stats?.reading?.avgReadTimeMinutes || 0} min`} icon={Clock} />
               <StatCard title="PDF Downloads" value={stats?.reading?.totalDownloads || 0} icon={Download} trend="up" />
@@ -130,7 +130,7 @@ export default function Dashboard() {
             </div>
 
             {/* Charts Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 mb-12">
               {/* Popular Gates */}
               <div className="bg-[#111] border border-gray-800 p-8 rounded-lg shadow-xl">
                 <h3 className="text-gray-200 text-sm uppercase tracking-widest mb-8">Popular Gates Distribution</h3>

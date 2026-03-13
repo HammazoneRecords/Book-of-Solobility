@@ -54,7 +54,7 @@ export default function GateSelection() {
     }
   };
 
-  const currentRadius = windowWidth < 768 ? 120 : 180;
+  const currentRadius = windowWidth < 400 ? 80 : windowWidth < 768 ? 120 : 180;
   const activeRadius = (stage === 'final' || stage === 'forging') ? currentRadius : 0;
 
   const gatePositions = GATES.map((gate, i) => {
@@ -74,7 +74,7 @@ export default function GateSelection() {
       {/* Ambient background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,208,255,0.05)_0%,transparent_70%)] pointer-events-none" />
 
-      <div className="relative w-full max-w-3xl aspect-square flex items-center justify-center">
+      <div className="relative w-full max-w-xs sm:max-w-lg md:max-w-3xl aspect-square flex items-center justify-center">
         {/* Initial 8 Glyphs */}
         <AnimatePresence>
           {stage === 'initial' && (
@@ -92,7 +92,7 @@ export default function GateSelection() {
                     animate={{ opacity: 1, scale: 1, x, y }}
                     exit={{ opacity: 0, scale: 0, x: 0, y: 0, rotate: 180 }}
                     transition={{ duration: 1.5, delay: i * 0.1, ease: "easeInOut" }}
-                    className="absolute w-10 h-10 md:w-12 md:h-12"
+                    className="absolute w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12"
                   >
                     <Glyph type={`base${i + 1}` as any} className="w-full h-full opacity-40" />
                   </motion.div>
@@ -117,7 +117,7 @@ export default function GateSelection() {
               }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={{ duration: stage === 'forging' ? 2 : 0.3, ease: "easeInOut" }}
-              className="absolute flex flex-col items-center justify-center text-center w-40 md:w-48 pointer-events-none z-0"
+              className="absolute flex flex-col items-center justify-center text-center w-28 sm:w-40 md:w-48 pointer-events-none z-0"
             >
               <motion.div
                 animate={{
@@ -133,7 +133,7 @@ export default function GateSelection() {
               >
                 <Glyph
                   type={activeGate.id as any}
-                  className="w-32 h-32 md:w-48 md:h-48 opacity-60"
+                  className="w-20 h-20 sm:w-32 sm:h-32 md:w-48 md:h-48 opacity-60"
                 />
               </motion.div>
             </motion.div>
@@ -178,7 +178,7 @@ export default function GateSelection() {
                       }}
                       transition={{ duration: 0.3 }}
                     >
-                      <Glyph type={gate.id as any} className="w-12 h-12 md:w-16 md:h-16" />
+                      <Glyph type={gate.id as any} className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16" />
                     </motion.div>
                   </motion.div>
                 );

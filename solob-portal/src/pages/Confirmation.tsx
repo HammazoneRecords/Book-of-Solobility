@@ -172,11 +172,11 @@ export default function Confirmation() {
       >
         <DownloadPyramid gate={currentGate} />
 
-        <h1 className="text-4xl font-light tracking-widest text-gray-200 mb-6">
+        <h1 className="text-2xl sm:text-4xl font-light tracking-widest text-gray-200 mb-6">
           Reflection Forged
         </h1>
 
-        <p className="text-xl text-[#00d0ff] font-serif italic mb-12">
+        <p className="text-lg sm:text-xl text-[#00d0ff] font-serif italic mb-12">
           Thank you, {currentName}. Your purchase is confirmed.
         </p>
 
@@ -191,7 +191,7 @@ export default function Confirmation() {
 
         <div className="bg-[#111] border border-gray-800 rounded-lg p-8 w-full max-w-md mb-12 shadow-2xl">
           <p className="text-gray-500 text-xs uppercase tracking-widest mb-2">Invoice Number</p>
-          <p className="text-3xl font-mono text-gray-200 tracking-wider bg-black/50 py-4 rounded border border-gray-800">
+          <p className="text-2xl sm:text-3xl font-mono text-gray-200 tracking-wider bg-black/50 py-4 rounded border border-gray-800 break-all">
             {invoiceNumber}
           </p>
 
@@ -262,7 +262,7 @@ export default function Confirmation() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 bg-black/50 p-2 rounded border border-gray-800 mb-6">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-black/50 p-2 rounded border border-gray-800 mb-6">
                   <input
                     type="text"
                     readOnly
