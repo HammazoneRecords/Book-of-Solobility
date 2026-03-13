@@ -294,18 +294,6 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
                 </div>
               )}
 
-              <div className="mt-6 pt-4 border-t border-white/5">
-                <a
-                  href="/Book_of_Solobility_V0.pdf"
-                  download="Book_of_Solobility_V0.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded border border-white/10 hover:border-[#00d0ff]/50 hover:bg-[#00d0ff]/10 text-gray-400 hover:text-[#00d0ff] transition-all group"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-y-0.5 transition-transform"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                  <span className="text-[9px] uppercase tracking-widest font-sans font-medium">Download Full Book (PDF)</span>
-                </a>
-              </div>
 
               <div className="mt-4 flex justify-between items-end opacity-40">
                 <p className="text-[6px] uppercase tracking-[0.4em] text-gray-500 font-sans w-2/3 break-all">{sessionId}</p>
