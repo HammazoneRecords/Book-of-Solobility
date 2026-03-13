@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PdfPageRenderer } from './PdfPageRenderer';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
@@ -31,6 +31,10 @@ interface PdfChapterContentProps {
   name: string;
 }
 
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 2.5;
+const ZOOM_STEP = 0.25;
+
 export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
   mainScrollRef,
   isSidebarOpen,
@@ -52,11 +56,77 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
   name,
 }) => {
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [isPageJumpActive, setIsPageJumpActive] = useState(false);
+  const [pageJumpValue, setPageJumpValue] = useState('');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const pageJumpInputRef = useRef<HTMLInputElement>(null);
+
+  // Zoom handlers
+  const zoomIn = useCallback(() => {
+    setZoomLevel(prev => Math.min(prev + ZOOM_STEP, MAX_ZOOM));
+  }, []);
+
+  const zoomOut = useCallback(() => {
+    setZoomLevel(prev => Math.max(prev - ZOOM_STEP, MIN_ZOOM));
+  }, []);
+
+  const zoomReset = useCallback(() => {
+    setZoomLevel(1);
+  }, []);
+
+  // Pinch-to-zoom callback
+  const handlePinchZoom = useCallback((delta: number) => {
+    setZoomLevel(prev => Math.min(Math.max(prev + delta, MIN_ZOOM), MAX_ZOOM));
+  }, []);
+
+  // Page jump handlers
+  const openPageJump = () => {
+    setPageJumpValue(String(currentPdfPage));
+    setIsPageJumpActive(true);
+    setTimeout(() => pageJumpInputRef.current?.select(), 50);
+  };
+
+  const handlePageJump = (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = parseInt(pageJumpValue, 10);
+    if (target >= 1 && target <= totalPages) {
+      // We need to navigate - use a custom event the parent listens to
+      const event = new CustomEvent('solob-page-jump', { detail: { page: target } });
+      window.dispatchEvent(event);
+    }
+    setIsPageJumpActive(false);
+  };
+
+  // Fullscreen toggle
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      contentRef.current?.requestFullscreen().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  };
+
+  // Listen for fullscreen exit (e.g. Esc key)
+  React.useEffect(() => {
+    const handler = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  const zoomPercent = Math.round(zoomLevel * 100);
 
   return (
-    <main ref={mainScrollRef as any} className="flex-1 flex flex-col items-center pb-32 overflow-y-auto h-screen custom-scrollbar relative">
+    <main ref={(el) => {
+      (mainScrollRef as any).current = el;
+      (contentRef as any).current = el;
+    }} className="flex-1 flex flex-col items-center pb-32 overflow-y-auto h-screen custom-scrollbar relative bg-[#050505]">
       {/* Control Bar (Top) */}
-      <div className={`fixed top-0 left-0 h-16 flex items-center justify-between px-8 z-40 bg-gradient-to-b from-black/80 to-transparent pointer-events-none transition-all duration-300 ${isSidebarOpen ? 'w-full xl:w-[calc(100%-320px)] xl:left-[320px]' : 'w-full left-0'}`}>
+      <div className={`fixed top-0 left-0 h-14 flex items-center justify-between px-4 md:px-8 z-40 bg-gradient-to-b from-black/90 via-black/60 to-transparent pointer-events-none transition-all duration-300 ${isSidebarOpen ? 'w-full xl:w-[calc(100%-320px)] xl:left-[320px]' : 'w-full left-0'}`}>
+        {/* Left: Hamburger */}
         <button
           onClick={() => setIsSidebarOpen(true)}
           className={`pointer-events-auto w-12 h-12 p-2 -m-2 flex items-center justify-center text-gray-500 hover:text-[#00d0ff] transition-all group ${isSidebarOpen ? 'hidden' : 'flex'}`}
@@ -68,22 +138,64 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
           </div>
         </button>
 
-        <div className="pointer-events-auto ml-auto flex items-center gap-3">
+        {/* Right: Controls */}
+        <div className="pointer-events-auto ml-auto flex items-center gap-1 md:gap-2 flex-wrap justify-end">
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-0.5 border border-white/5 rounded-full px-1">
+            <button
+              onClick={zoomOut}
+              disabled={zoomLevel <= MIN_ZOOM}
+              className="px-2 py-1.5 text-[10px] text-gray-400 hover:text-[#00d0ff] transition-colors disabled:opacity-30 disabled:hover:text-gray-400"
+              title="Zoom Out"
+            >
+              −
+            </button>
+            <button
+              onClick={zoomReset}
+              className="px-2 py-1.5 text-[8px] uppercase tracking-widest text-gray-500 hover:text-[#00d0ff] transition-colors min-w-[3rem] text-center"
+              title="Reset Zoom"
+            >
+              {zoomPercent}%
+            </button>
+            <button
+              onClick={zoomIn}
+              disabled={zoomLevel >= MAX_ZOOM}
+              className="px-2 py-1.5 text-[10px] text-gray-400 hover:text-[#00d0ff] transition-colors disabled:opacity-30 disabled:hover:text-gray-400"
+              title="Zoom In"
+            >
+              +
+            </button>
+          </div>
+
+          {/* Theme Toggle */}
           <button
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className="flex items-center gap-2 px-4 py-2 text-[8px] uppercase tracking-[0.3em] transition-all rounded-full border border-white/5 hover:border-[#00d0ff]/30"
+            className="flex items-center gap-2 px-3 py-2 text-[8px] uppercase tracking-[0.3em] transition-all rounded-full border border-white/5 hover:border-[#00d0ff]/30"
             title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             <span className={isDarkMode ? 'text-[#00d0ff]' : 'text-gray-500'}>
-              {isDarkMode ? '☾ Dark' : '☀ Light'}
+              {isDarkMode ? '☾' : '☀'}
             </span>
           </button>
+
+          {/* Bookmark */}
           <button
             onClick={toggleBookmark}
-            className="flex items-center gap-2 px-4 py-2 text-[8px] uppercase tracking-[0.3em] transition-all rounded-full border border-white/5 hover:border-[#00d0ff]/30"
+            className="flex items-center gap-2 px-3 py-2 text-[8px] uppercase tracking-[0.3em] transition-all rounded-full border border-white/5 hover:border-[#00d0ff]/30"
           >
             <span className={isBookmarked ? 'text-[#00d0ff]' : 'text-gray-500'}>
-              {isBookmarked ? '★ Bookmarked' : '☆ Bookmark'}
+              {isBookmarked ? '★' : '☆'}
+            </span>
+          </button>
+
+          {/* Fullscreen */}
+          <button
+            onClick={toggleFullscreen}
+            className="flex items-center gap-2 px-3 py-2 text-[8px] uppercase tracking-[0.3em] transition-all rounded-full border border-white/5 hover:border-[#00d0ff]/30"
+            title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+          >
+            <span className="text-gray-500 hover:text-[#00d0ff]">
+              {isFullscreen ? '⛶' : '⛶'}
             </span>
           </button>
         </div>
@@ -106,12 +218,12 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -15 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
-          className="z-10 w-full max-w-4xl p-6 md:p-12 mt-16 bg-black/40 backdrop-blur-md border border-white/5 shadow-[0_40px_100px_rgba(0,0,0,0.8)] rounded-sm min-h-[70vh] flex flex-col relative"
+          className="z-10 w-full max-w-4xl p-4 md:p-12 mt-16 bg-black/40 backdrop-blur-md border border-white/5 shadow-[0_40px_100px_rgba(0,0,0,0.8)] rounded-sm min-h-[70vh] flex flex-col relative"
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-white/[0.01] via-transparent to-white/[0.03] pointer-events-none rounded-sm" />
 
           <div
-            className="relative w-full flex-1 flex items-center justify-center transition-all duration-500"
+            className="relative w-full flex-1 flex items-start justify-center transition-all duration-500 overflow-auto"
             style={isDarkMode ? {
               filter: 'invert(0.92) hue-rotate(180deg)',
               borderRadius: '4px'
@@ -128,6 +240,8 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
               <PdfPageRenderer
                 pdfDoc={pdfDoc}
                 pageNumber={currentPdfPage}
+                zoom={zoomLevel}
+                onPinchZoom={handlePinchZoom}
               />
             )}
           </div>
@@ -142,9 +256,33 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
             </button>
 
             <div className="flex flex-col items-center gap-1">
-              <span className="text-[10px] uppercase tracking-[0.4em] text-[#00d0ff] font-sans">
-                Page {currentPdfPage} of {totalPages}
-              </span>
+              {/* Page indicator / Page Jump */}
+              {isPageJumpActive ? (
+                <form onSubmit={handlePageJump} className="flex items-center gap-2">
+                  <input
+                    ref={pageJumpInputRef}
+                    type="number"
+                    min={1}
+                    max={totalPages}
+                    value={pageJumpValue}
+                    onChange={(e) => setPageJumpValue(e.target.value)}
+                    onBlur={() => setIsPageJumpActive(false)}
+                    className="w-16 bg-black/50 border border-[#00d0ff]/30 rounded px-2 py-1 text-center text-[10px] text-[#00d0ff] font-sans uppercase tracking-widest focus:outline-none focus:border-[#00d0ff]"
+                    autoFocus
+                  />
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-gray-600 font-sans">
+                    of {totalPages}
+                  </span>
+                </form>
+              ) : (
+                <button
+                  onClick={openPageJump}
+                  className="text-[10px] uppercase tracking-[0.4em] text-[#00d0ff] font-sans hover:text-white transition-colors cursor-pointer"
+                  title="Click to jump to a page"
+                >
+                  Page {currentPdfPage} of {totalPages}
+                </button>
+              )}
               <div className="flex gap-2">
                 {chapters[currentChapter] && Array.from({ length: chapters[currentChapter].pages }).map((_, idx) => (
                   <div
@@ -160,7 +298,7 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
                 onClick={nextPage}
                 className="text-[10px] uppercase tracking-widest text-[#00d0ff] hover:text-white transition-colors p-4 -m-4"
               >
-                Next →
+              Next →
               </button>
             ) : (
               <button

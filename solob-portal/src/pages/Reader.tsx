@@ -75,7 +75,7 @@ export default function Reader() {
 
   const currentAmbientGate = jhanosGates.find(g => currentChapter >= g.start && currentChapter <= g.end)?.name || 'SYLA';
 
-  // Load the PDF document
+  // Load the PDF document and restore last page
   useEffect(() => {
     let cancelled = false;
     const loadPdf = async () => {
@@ -86,6 +86,15 @@ export default function Reader() {
           setPdfDoc(doc);
           setTotalPages(doc.numPages);
           setIsLoading(false);
+
+          // Restore last read page from localStorage
+          const savedPage = localStorage.getItem(`solob_lastpage_${sessionId}`);
+          if (savedPage) {
+            const page = parseInt(savedPage, 10);
+            if (page >= 1 && page <= doc.numPages) {
+              setCurrentPdfPage(page);
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to load PDF:', err);
@@ -95,6 +104,60 @@ export default function Reader() {
     loadPdf();
     return () => { cancelled = true; };
   }, []);
+
+  // Save current page to localStorage on every page change
+  useEffect(() => {
+    if (sessionId && currentPdfPage > 0) {
+      localStorage.setItem(`solob_lastpage_${sessionId}`, String(currentPdfPage));
+    }
+  }, [currentPdfPage, sessionId]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept if user is typing in an input
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      switch (e.key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          nextPage();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          prevPage();
+          break;
+        case 'Home':
+          e.preventDefault();
+          setCurrentPdfPage(1);
+          mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+          break;
+        case 'End':
+          e.preventDefault();
+          if (totalPages > 0) {
+            setCurrentPdfPage(totalPages);
+            mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+          break;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentPdfPage, totalPages]);
+
+  // Listen for page-jump events from PdfChapterContent
+  useEffect(() => {
+    const handlePageJump = (e: Event) => {
+      const page = (e as CustomEvent).detail?.page;
+      if (page >= 1 && page <= totalPages) {
+        setCurrentPdfPage(page);
+        mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    };
+    window.addEventListener('solob-page-jump', handlePageJump);
+    return () => window.removeEventListener('solob-page-jump', handlePageJump);
+  }, [totalPages]);
 
   // Silent analytics heartbeat (every 30s)
   const maxPageRef = useRef(1);
