@@ -21,7 +21,7 @@ export default function Threshold() {
   useEffect(() => {
     // Auto-redirect if they already have a session, keeping them off the threshold page
     if (storedSessionId && !showLogin) {
-      navigate(`/confirmation?session_id=${storedSessionId}&gate=${storedGate}&name=${encodeURIComponent(storedName)}&tier=${storedTier}&restored=true`, { replace: true });
+      navigate(`/reader?session_id=${storedSessionId}&gate=${storedGate}&name=${encodeURIComponent(storedName)}&tier=${storedTier}&restored=true`, { replace: true });
       return;
     }
 

@@ -136,7 +136,7 @@ export default function Confirmation() {
 
   const handleReset = () => {
     reset();
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   const currentGate = gate || gateParam;

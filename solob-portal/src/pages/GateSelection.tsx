@@ -21,10 +21,17 @@ export default function GateSelection() {
   const [selectedGate, setSelectedGateLocal] = useState<string | null>(null);
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
+  const { name: storedName, gate: storedGate, sessionId: storedSessionId, tier: storedTier } = useUserStore();
   const setGate = useUserStore((state) => state.setGate);
   const navigate = useNavigate();
 
   useEffect(() => {
+    // If they already have a session, don't let them pick a gate again
+    if (storedSessionId) {
+      navigate(`/reader?session_id=${storedSessionId}&gate=${storedGate}&name=${encodeURIComponent(storedName)}&tier=${storedTier}&restored=true`, { replace: true });
+      return;
+    }
+
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);

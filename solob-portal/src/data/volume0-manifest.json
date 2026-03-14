@@ -3,7 +3,7 @@
     "id": 0,
     "filename": "000_Chapter_Zero.md",
     "title": "The First Touch",
-    "pages": 1
+    "pages": 7
   },
   {
     "id": 1,
@@ -51,19 +51,19 @@
     "id": 8,
     "filename": "008_Chapter_Eight.md",
     "title": "Shimmer Theory",
-    "pages": 1
+    "pages": 5
   },
   {
     "id": 9,
     "filename": "009_Chapter_Nine.md",
     "title": "Solobility",
-    "pages": 3
+    "pages": 5
   },
   {
     "id": 10,
     "filename": "010_Chapter_Ten.md",
     "title": "Dimensions of Solobility",
-    "pages": 12
+    "pages": 6
   },
   {
     "id": 11,
@@ -213,12 +213,12 @@
     "id": 35,
     "filename": "035_Chapter_Thirty_Five.md",
     "title": "The Ritual of the Ash",
-    "pages": 4
+    "pages": 5
   },
   {
     "id": 36,
     "filename": "036_Chapter_Thirty_Six.md",
     "title": "Begin Again",
-    "pages": 3
+    "pages": 2
   }
 ]

@@ -112,7 +112,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
               </button>
             </div>
 
-            <nav className="flex-1 min-h-[150px] overflow-y-auto space-y-4 pr-4 custom-scrollbar overflow-x-hidden border-t border-white/5 pt-4">
+            <nav className="flex-1 min-h-[150px] overflow-y-auto pr-4 custom-scrollbar overflow-x-hidden border-t border-white/5 pt-8 space-y-10">
               {jhanosGates.map((gateItem) => {
                 const isExpanded = expandedGates.includes(gateItem.name);
                 return (
@@ -122,8 +122,8 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
                       onClick={() => toggleGate(gateItem.name)}
                     >
                       <div>
-                        <h4 className="text-[10px] uppercase tracking-[0.4em] text-[#00d0ff] group-hover:text-white transition-colors">{gateItem.name}</h4>
-                        <p className="text-[8px] uppercase tracking-widest text-gray-600 mt-1">{gateItem.label}</p>
+                        <h4 className="text-[10px] uppercase font-bold tracking-[0.5em] text-[#00d0ff]/90 group-hover:text-white transition-colors">{gateItem.name}</h4>
+                        <p className="text-[9px] uppercase tracking-widest text-gray-700 mt-1.5 font-medium">{gateItem.label}</p>
                       </div>
                       <motion.div
                         animate={{ rotate: isExpanded ? 180 : 0 }}
@@ -143,22 +143,28 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <div className="space-y-4 pl-2 border-l border-white/5 pt-2 pb-2">
+                          <div className="space-y-6 pl-1 border-l border-white/5 pt-6 pb-2 mt-2">
                             {chapters.slice(gateItem.start, gateItem.end + 1).map((ch, idxOffset) => {
                               const idx = gateItem.start + idxOffset;
                               const isCurrentChapter = idx === currentChapter;
 
                               return (
-                                <div key={idx} className="space-y-4 pl-2">
+                                <div key={idx} className={`relative transition-all duration-300 ${isCurrentChapter ? 'pl-4' : 'pl-2'}`}>
+                                  {isCurrentChapter && (
+                                    <motion.div
+                                      layoutId="active-indicator"
+                                      className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#00d0ff] shadow-[0_0_8px_rgba(0,208,255,0.6)]"
+                                    />
+                                  )}
                                   <button
-                                    onClick={() => setCurrentChapter(idx)}
-                                    className="w-full text-left group flex items-start gap-4"
+                                    onClick={() => navigateToChapter(idx)}
+                                    className="w-full text-left group flex items-start gap-5 py-1"
                                   >
-                                    <span className={`text-[10px] font-sans mt-2 transition-colors ${isCurrentChapter ? 'text-[#00d0ff]' : 'text-gray-700 group-hover:text-gray-400'}`}>
+                                    <span className={`text-[11px] font-sans mt-1.5 transition-colors w-5 shrink-0 ${isCurrentChapter ? 'text-[#00d0ff]' : 'text-gray-800 group-hover:text-gray-500'}`}>
                                       {String(idx).padStart(2, '0')}
                                     </span>
                                     <div className="flex-1">
-                                      <p className={`text-lg transition-colors ${isCurrentChapter ? 'text-white' : 'text-gray-500 group-hover:text-gray-300'} font-serif italic line-clamp-2`}>
+                                      <p className={`text-[1.1rem] leading-relaxed transition-colors ${isCurrentChapter ? 'text-white' : 'text-gray-600 group-hover:text-gray-300'} font-serif italic line-clamp-2`}>
                                         {ch.title}
                                       </p>
                                     </div>

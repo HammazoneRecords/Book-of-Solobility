@@ -17,7 +17,7 @@ const gateToGlyphName: Record<string, string> = {
 };
 
 export default function Offering() {
-  const { name, gate } = useUserStore();
+  const { name, gate, name: storedName, gate: storedGate, sessionId: storedSessionId, tier: storedTier } = useUserStore();
   const glyphName = gate ? gateToGlyphName[gate] || gate : '';
   const [isLoading, setIsLoading] = useState(false);
   const [mainOption, setMainOption] = useState<'free' | 'pay_later' | null>(null);
@@ -26,6 +26,12 @@ export default function Offering() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // If they already have a session, don't let them go through the offering again
+    if (storedSessionId) {
+      navigate(`/reader?session_id=${storedSessionId}&gate=${storedGate}&name=${encodeURIComponent(storedName)}&tier=${storedTier}&restored=true`, { replace: true });
+      return;
+    }
+
     if (mainOption && !lockedOption) {
       const timer = setTimeout(() => {
         setLockedOption(mainOption);
