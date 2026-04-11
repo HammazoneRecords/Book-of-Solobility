@@ -93,7 +93,7 @@ export const ReaderSidebar: React.FC<ReaderSidebarProps> = ({
             <div className="flex justify-between items-start mb-12">
               <div className="flex flex-col">
                 <button
-                  onClick={() => navigate('/')}
+                  onClick={() => navigate(`/confirmation?session_id=${sessionId}&gate=${gate}&name=${encodeURIComponent(name)}&restored=true`)}
                   className="text-[10px] uppercase tracking-[0.4em] text-gray-400 hover:text-[#00d0ff] transition-colors mb-4 text-left"
                 >
                   whatissolob.com
