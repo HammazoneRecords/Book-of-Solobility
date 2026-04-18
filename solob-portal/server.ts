@@ -6,7 +6,8 @@ import fs from "fs";
 import { marked } from 'marked';
 import puppeteer from 'puppeteer';
 
-const db = new Database("solobility.db");
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, "data", "solobility.db");
+const db = new Database(DB_PATH);
 
 // Initialize database
 db.exec(`
@@ -39,7 +40,7 @@ db.exec(`
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = parseInt(process.env.PORT || '3000');
 
   // Increase payload size limit for large markdown chapters
   app.use(express.json({ limit: '10mb' }));

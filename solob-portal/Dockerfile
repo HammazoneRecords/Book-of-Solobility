@@ -31,7 +31,8 @@ RUN npm install
 COPY . .
 
 # solobility.db is volume-mounted at /app/data/solobility.db
-# server.ts opens it as "solobility.db" (relative) — symlink to volume mount
+# server.ts reads DB_PATH env var (defaults to /app/data/solobility.db)
+RUN mkdir -p /app/data
 VOLUME ["/app/data"]
 
 EXPOSE 3000
