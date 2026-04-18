@@ -30,6 +30,9 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 
+# Build the Vite frontend (outputs to dist/)
+RUN npm run build
+
 # solobility.db is volume-mounted at /app/data/solobility.db
 # server.ts reads DB_PATH env var (defaults to /app/data/solobility.db)
 RUN mkdir -p /app/data
