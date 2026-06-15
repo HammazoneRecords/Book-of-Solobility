@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 
+const SITE_ORIGIN = 'https://whatissolob.com';
+
 interface PageSeoProps {
   title: string;
   description: string;
@@ -39,8 +41,11 @@ export default function PageSeo({ title, description, canonical, ogImage }: Page
     }
 
     if (ogImage) {
-      setMeta('meta[property="og:image"]', 'property', ogImage);
-      setMeta('meta[name="twitter:image"]', 'name', ogImage);
+      // Social scrapers (Facebook / X / LinkedIn) require an absolute URL —
+      // a relative path renders no card image. Leave already-absolute URLs untouched.
+      const absoluteOgImage = ogImage.startsWith('http') ? ogImage : `${SITE_ORIGIN}${ogImage}`;
+      setMeta('meta[property="og:image"]', 'property', absoluteOgImage);
+      setMeta('meta[name="twitter:image"]', 'name', absoluteOgImage);
     }
   }, [title, description, canonical, ogImage]);
 
