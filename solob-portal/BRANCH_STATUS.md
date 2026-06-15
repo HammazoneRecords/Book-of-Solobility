@@ -12,19 +12,23 @@
 
 | Branch | Last Updated | Deployed? | Notes |
 |---|---|---|---|
-| main | 2026-05-02 | ✅ Production | Nav border-b removed, live at whatissolob.com |
+| main | 2026-06-15 | ✅ Production | SEO OG fix deployed — `55f72a1`, live at whatissolob.com |
+
+> **Deploy repo & path:** pushes go to the `book-of-solobility` remote (`HammazoneRecords/Book-of-Solobility`), NOT origin (`ovandobrown.blog`, a diverged blog repo — do not force). VPS pulls `/opt/mw/solob-portal-repo/`; compose `solob` build context = `./solob-portal-repo/solob-portal`. Full deploy gotchas: `vps_management/docker_facts.md` → "solob-portal — Deploy Gotchas".
 
 ## Last Action
 
-**Date:** 2026-05-02
-**Branch:** main
-**Action:** Hotfix — nav border-b removed from all SEO pages
+**Date:** 2026-06-15
+**Branch:** main (merged from `feature/solob-seo-fixes`)
+**Action:** SEO fix — per-gate + absolute OG images, tightened robots, prerender Docker fix; deployed to VPS
 **What changed:**
-- `src/pages/seo/About.tsx` — removed `border-b border-white/5` from nav className
-- `src/pages/seo/GatePage.tsx` — removed `border-b border-white/5` from nav className
-- `src/pages/seo/GatesIndex.tsx` — removed `border-b border-white/5` from nav className
-- `src/pages/seo/Glossary.tsx` — removed `border-b border-white/5` from nav className
+- `src/components/PageSeo.tsx` — og:image / twitter:image now absolute URLs (relative paths break social card scrapers)
+- `src/pages/seo/GatePage.tsx` — each gate uses its own glyph (was all `syla.png`); canonical lowercased
+- `public/robots.txt` — `Disallow: /gates$` + `/reader`
+- `scripts/prerender.js` — `--no-sandbox` so Chromium launches as root in the Docker build
+- `/opt/mw/docker-compose.yml` — repointed `solob` build context to `./solob-portal-repo/solob-portal` (was building a stale copy)
 
+**Verified:** local build + prerender, 13/13 logic checks, and live container serves absolute per-gate og:image + prerendered gate pages.
 **Schema migration:** none
 
 ---
