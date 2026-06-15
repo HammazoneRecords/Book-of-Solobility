@@ -90,7 +90,12 @@ async function prerender() {
   }
 
   const server = await startServer();
-  const browser = await puppeteer.launch({ headless: true });
+  // --no-sandbox is required when this runs as root inside Docker (the VPS build),
+  // otherwise Chromium refuses to launch. Matches the PDF puppeteer launch in server.ts.
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  });
 
   try {
     for (const route of SEO_ROUTES) {
