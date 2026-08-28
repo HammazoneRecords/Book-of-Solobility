@@ -2,17 +2,13 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUserStore } from './store';
-import Threshold from './pages/Threshold';
 import GateSelection from './pages/GateSelection';
 import Offering from './pages/Offering';
 import Confirmation from './pages/Confirmation';
 import Dashboard from './pages/Dashboard';
 import Reader from './pages/Reader';
 import BookDesigner from './pages/BookDesigner';
-import About from './pages/seo/About';
-import GatesIndex from './pages/seo/GatesIndex';
-import GatePage from './pages/seo/GatePage';
-import Glossary from './pages/seo/Glossary';
+import PublicLibrary from './pages/PublicLibrary';
 
 import { Home } from 'lucide-react';
 
@@ -69,16 +65,14 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       {/* @ts-expect-error key is needed for AnimatePresence */}
       <Routes location={location} key={location.pathname.split('/')[1] || 'home'}>
-        <Route path="/reader" element={<PageWrapper><Reader /></PageWrapper>} />
+        <Route path="/reader" element={<Navigate to="/read/volume-0" replace />} />
+        <Route path="/read" element={<PageWrapper><PublicLibrary /></PageWrapper>} />
+        <Route path="/read/:volumeId" element={<PageWrapper><Reader /></PageWrapper>} />
         <Route path="*" element={
           <PageWrapper>
             <GlobalNav />
             <Routes location={location}>
-              <Route path="/" element={<Threshold />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/gates-overview" element={<GatesIndex />} />
-              <Route path="/gates/:gateName" element={<GatePage />} />
-              <Route path="/glossary" element={<Glossary />} />
+              <Route path="/" element={<Navigate to="/read" replace />} />
               <Route path="/gates" element={<ProtectedRoute><GateSelection /></ProtectedRoute>} />
               <Route path="/offering" element={<ProtectedRoute><Offering /></ProtectedRoute>} />
               <Route path="/confirmation" element={<Confirmation />} />

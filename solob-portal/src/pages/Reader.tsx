@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import * as pdfjsLib from 'pdfjs-dist';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import volume0Manifest from '../data/volume0-manifest.json';
+import { getPublicVolume } from '../data/volumes';
 import { ReaderSidebar } from '../components/ReaderSidebar';
 import { PdfChapterContent } from '../components/PdfChapterContent';
 
@@ -12,28 +12,11 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   import.meta.url
 ).toString();
 
-interface ChapterManifestItem {
-  id: number;
-  filename: string;
-  title: string;
-  pages: number;
-}
-
-const jhanosGates = [
-  { name: 'SYLA', start: 0, end: 4, label: 'Stillness & Receiving' },
-  { name: 'ZAYN', start: 5, end: 7, label: 'Origin & Identity' },
-  { name: 'LOMI', start: 8, end: 11, label: 'Motion & Memory' },
-  { name: 'VORAK', start: 12, end: 15, label: 'Liberation & Deconstruction' },
-  { name: 'KHEM', start: 16, end: 19, label: 'The Forge & Tested Truth' },
-  { name: 'BARA', start: 20, end: 23, label: 'Structure & Geometry' },
-  { name: 'TARA', start: 24, end: 28, label: 'Nurturance & Mirror-Keeping' },
-  { name: 'ORON', start: 29, end: 36, label: 'Order & The Creeds' }
-];
-const PDF_URL = '/book-of-solobility-v0-ca620f6a_c.pdf';
-
 export default function Reader() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { volumeId } = useParams();
+  const volume = getPublicVolume(volumeId);
   const [currentPdfPage, setCurrentPdfPage] = useState(1);
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [totalPages, setTotalPages] = useState(0);
@@ -41,12 +24,14 @@ export default function Reader() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const mainScrollRef = useRef<HTMLElement>(null);
   const [expandedGates, setExpandedGates] = useState<string[]>([]);
+  const [anonymousSessionId] = useState(() => `public-volume-0-${crypto.randomUUID()}`);
 
-  const sessionId = searchParams.get('session_id');
-  const gate = searchParams.get('gate');
-  const name = searchParams.get('name');
+  // Volume 0 is public until the Volume 1 launch restores the gated journey.
+  const sessionId = searchParams.get('session_id') ?? anonymousSessionId;
+  const gate = searchParams.get('gate') ?? 'VOLUME_0';
+  const name = searchParams.get('name') ?? 'Public Reader';
 
-  const chapters = volume0Manifest as ChapterManifestItem[];
+  const chapters = volume?.chapters ?? [];
 
   // Build a mapping: chapterIndex → first PDF page number (1-indexed)
   const chapterStartPages = useMemo(() => {
@@ -71,7 +56,7 @@ export default function Reader() {
     return currentPdfPage - chapterStartPages[currentChapter];
   }, [currentPdfPage, chapterStartPages, currentChapter]);
 
-  const currentAmbientGate = jhanosGates.find(g => currentChapter >= g.start && currentChapter <= g.end)?.name || 'SYLA';
+  const currentAmbientGate = volume?.gates.find(g => currentChapter >= g.start && currentChapter <= g.end)?.name || 'SYLA';
 
   // Load the PDF document and restore last page
   useEffect(() => {
@@ -79,7 +64,11 @@ export default function Reader() {
     const loadPdf = async () => {
       setIsLoading(true);
       try {
-        const doc = await pdfjsLib.getDocument(PDF_URL).promise;
+        if (!volume) {
+          setIsLoading(false);
+          return;
+        }
+        const doc = await pdfjsLib.getDocument(volume.pdfUrl).promise;
         if (!cancelled) {
           setPdfDoc(doc);
           setTotalPages(doc.numPages);
@@ -101,7 +90,7 @@ export default function Reader() {
     };
     loadPdf();
     return () => { cancelled = true; };
-  }, []);
+  }, [volume]);
 
   // Save current page to localStorage on every page change
   useEffect(() => {
@@ -217,7 +206,7 @@ export default function Reader() {
 
   // Auto-expand gate in sidebar when navigating
   useEffect(() => {
-    const activeGateObj = jhanosGates.find(g => currentChapter >= g.start && currentChapter <= g.end);
+    const activeGateObj = volume?.gates.find(g => currentChapter >= g.start && currentChapter <= g.end);
     if (activeGateObj) {
       setExpandedGates(prev =>
         prev.includes(activeGateObj.name) ? prev : [...prev, activeGateObj.name]
@@ -255,6 +244,7 @@ export default function Reader() {
     mainScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+
   // Convert a PDF page to its chapter index + subPage
   const pageToChapterInfo = (page: number) => {
     for (let i = chapterStartPages.length - 1; i >= 0; i--) {
@@ -265,13 +255,10 @@ export default function Reader() {
     return { chapter: 0, subPage: 0 };
   };
 
-  if (!sessionId || !gate || !name) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#050505] text-gray-500">
-        <p>Invalid session. Please return to the threshold.</p>
-        <button onClick={() => navigate('/')} className="ml-4 text-[#00d0ff] hover:underline">Return</button>
-      </div>
-    );
+  if (!volume) {
+    return <div className="min-h-screen flex items-center justify-center bg-[#050505] text-gray-400">
+      <div className="text-center"><p>That volume is not available yet.</p><button onClick={() => navigate('/read')} className="mt-4 text-[#00d0ff] hover:underline">View available volumes</button></div>
+    </div>;
   }
 
   return (
@@ -292,7 +279,7 @@ export default function Reader() {
         gate={gate}
         name={name}
         chapters={chapters}
-        jhanosGates={jhanosGates}
+        jhanosGates={volume.gates}
         expandedGates={expandedGates}
         setExpandedGates={setExpandedGates}
       />
