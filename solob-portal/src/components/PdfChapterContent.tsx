@@ -79,7 +79,7 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
 
   // Page jump handlers
   const openPageJump = () => {
-    setPageJumpValue(String(currentPdfPage));
+    setPageJumpValue(String(currentPdfPage - 1));
     setIsPageJumpActive(true);
     setTimeout(() => pageJumpInputRef.current?.select(), 50);
   };
@@ -87,13 +87,17 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
   const handlePageJump = (e: React.FormEvent) => {
     e.preventDefault();
     const target = parseInt(pageJumpValue, 10);
-    if (target >= 1 && target <= totalPages) {
+    if (target >= 0 && target < totalPages) {
       // We need to navigate - use a custom event the parent listens to
-      const event = new CustomEvent('solob-page-jump', { detail: { page: target } });
+      const event = new CustomEvent('solob-page-jump', { detail: { page: target + 1 } });
       window.dispatchEvent(event);
     }
     setIsPageJumpActive(false);
   };
+
+  // PDF.js is one-based; the reader exposes its zero-based PDF index.
+  const displayPageNumber = currentPdfPage - 1;
+  const displayTotalPages = Math.max(totalPages - 1, 0);
 
   // Fullscreen toggle
   const toggleFullscreen = () => {
@@ -249,8 +253,8 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
                   <input
                     ref={pageJumpInputRef}
                     type="number"
-                    min={1}
-                    max={totalPages}
+                    min={0}
+                    max={displayTotalPages}
                     value={pageJumpValue}
                     onChange={(e) => setPageJumpValue(e.target.value)}
                     onBlur={() => setIsPageJumpActive(false)}
@@ -258,7 +262,7 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
                     autoFocus
                   />
                   <span className="text-[10px] uppercase tracking-[0.2em] text-gray-600 font-sans">
-                    of {totalPages}
+                    of {displayTotalPages}
                   </span>
                 </form>
               ) : (
@@ -267,7 +271,7 @@ export const PdfChapterContent: React.FC<PdfChapterContentProps> = ({
                   className="text-[10px] uppercase tracking-[0.4em] text-[#00d0ff] font-sans hover:text-white transition-colors cursor-pointer"
                   title="Click to jump to a page"
                 >
-                  Page {currentPdfPage} of {totalPages}
+                  Page {displayPageNumber} of {displayTotalPages}
                 </button>
               )}
               <div className="flex gap-2">
